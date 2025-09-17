@@ -51,8 +51,8 @@ Modern and responsive UI using ShadCN components, with rich animations via Lotti
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/swift-chat.git
-   cd swift-chat
+   git clone https://github.com/ShivanshKaushik007/swift.git
+   cd swift
    ```
 
 2. **Install dependencies for server**
