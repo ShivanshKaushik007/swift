@@ -35,7 +35,7 @@ export class AuthService {
     await sendEmail({
       to: email,
       subject: "Welcome! Please verify your email.",
-      text: `Click the link to verify your email: \${process.env.ORIGIN}/verify-email?token=\${verificationToken}`,
+      text: `Click the link to verify your email: ${process.env.ORIGIN}/verify-email?token=${verificationToken}`,
     });
 
     const accessToken = this.createAccessToken(email, user.id);
@@ -59,7 +59,7 @@ export class AuthService {
       throw new Error("User with the given email is not found.");
     }
     if (user.authProvider !== 'local') {
-      throw new Error(`This account uses \${user.authProvider} to login.`);
+      throw new Error(`This account uses ${user.authProvider} to login.`);
     }
     const auth = await compare(password, user.password as string);
     if (!auth) {
@@ -124,7 +124,7 @@ export class AuthService {
     await sendEmail({
       to: email,
       subject: "Password Reset Request",
-      text: `Reset your password here: \${process.env.ORIGIN}/reset-password?token=\${resetToken}`,
+      text: `Reset your password here: ${process.env.ORIGIN}/reset-password?token=${resetToken}`,
     });
   }
 
