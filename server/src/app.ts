@@ -1,5 +1,7 @@
-import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
@@ -14,8 +16,7 @@ import setupSocket from "./socket";
 import messagesRoutes from "./routes/MessagesRoutes";
 import channelRoutes from "./routes/ChannelRoutes";
 import { errorHandler } from "./middleware/ErrorHandler";
-
-dotenv.config();
+import { errorHandler } from "./middleware/ErrorHandler";
 
 const app = express();
 const port = process.env.PORT || 3001;

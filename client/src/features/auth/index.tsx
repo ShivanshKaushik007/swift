@@ -64,7 +64,9 @@ const Auth = () => {
           }
         }
       } catch (error: any) {
-        toast.error(error.response?.data || "Login failed");
+        const errObj = error.response?.data;
+        const msg = errObj?.message || errObj?.error || errObj || "Login failed";
+        toast.error(typeof msg === "string" ? msg : "Login failed");
       }
     }
   };
@@ -83,7 +85,9 @@ const Auth = () => {
       toast.success(response.data);
       setIsForgotPassword(false);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Forgot password failed");
+        const errObj = error.response?.data;
+        const msg = errObj?.message || errObj?.error || errObj || "Forgot password failed";
+        toast.error(typeof msg === "string" ? msg : "Forgot password failed");
     }
   };
 
@@ -104,7 +108,9 @@ const Auth = () => {
           navigate("/profile");
         }
       } catch (error: any) {
-        toast.error(error.response?.data?.error || "Signup failed");
+        const errObj = error.response?.data;
+        const msg = errObj?.message || errObj?.error || errObj || "Signup failed";
+        toast.error(typeof msg === "string" ? msg : "Signup failed");
       }
     }
   };
