@@ -1,5 +1,6 @@
 import MessageRepository from "../repositories/MessageRepository";
 import UserRepository from "../repositories/UserRepository";
+import Message from "../models/MessagesModel";
 import { mkdirSync, renameSync } from "fs";
 
 export class MessageService {
@@ -13,7 +14,7 @@ export class MessageService {
   }
 
   async editMessage(messageId: string, userId: string, newContent: string) {
-    const message = await MessageRepository.findById(messageId);
+    const message = await Message.findById(messageId);
     if (!message) throw new Error("Message not found");
     if (message.sender.toString() !== userId) throw new Error("Unauthorized");
     if (message.deletedAt) throw new Error("Cannot edit a deleted message");
@@ -24,7 +25,7 @@ export class MessageService {
   }
 
   async deleteMessage(messageId: string, userId: string) {
-    const message = await MessageRepository.findById(messageId);
+    const message = await Message.findById(messageId);
     if (!message) throw new Error("Message not found");
     if (message.sender.toString() !== userId) throw new Error("Unauthorized");
     
@@ -35,7 +36,7 @@ export class MessageService {
   }
 
   async reactToMessage(messageId: string, userId: string, emoji: string) {
-    const message = await MessageRepository.findById(messageId);
+    const message = await Message.findById(messageId);
     if (!message) throw new Error("Message not found");
 
     const reactionIndex = message.reactions.findIndex(r => r.emoji === emoji);
@@ -57,7 +58,7 @@ export class MessageService {
   }
 
   async pinMessage(messageId: string, isPinned: boolean) {
-    const message = await MessageRepository.findById(messageId);
+    const message = await Message.findById(messageId);
     if (!message) throw new Error("Message not found");
     message.isPinned = isPinned;
     return await message.save();
@@ -81,7 +82,7 @@ export class MessageService {
     // This could be optimized into a single updateMany, but this is explicit
     const updatedMessages = [];
     for (const msgId of messageIds) {
-      const msg = await MessageRepository.findById(msgId);
+      const msg = await Message.findById(msgId);
       if (msg && !msg.readBy.some(read => read.user.toString() === userId)) {
         msg.readBy.push({ user: userId as any, readAt: new Date() });
         msg.status = "read";

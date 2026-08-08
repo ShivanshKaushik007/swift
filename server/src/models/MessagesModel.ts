@@ -18,6 +18,7 @@ export interface IMessage extends Document {
   deletedAt?: Date;
   status: "sent" | "delivered" | "read" | "scheduled" | "draft";
   scheduledAt?: Date;
+  fileUrl?: string;
 }
 
 const messageSchema = new mongoose.Schema<IMessage>({
@@ -101,6 +102,10 @@ const messageSchema = new mongoose.Schema<IMessage>({
   },
   scheduledAt: {
     type: Date,
+    required: false,
+  },
+  fileUrl: {
+    type: String,
     required: false,
   },
 });
