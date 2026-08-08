@@ -69,29 +69,27 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
   return (
     <div 
       className={`relative group mt-5 ${isSender ? "text-right flex flex-col items-end" : "text-left flex flex-col items-start"}`}
-      onMouseEnter={() => setShowOptions(true)}
-      onMouseLeave={() => setShowOptions(false)}
     >
       {message.deletedAt ? (
         <div className={`italic text-xs text-white/40 border inline-block p-4 rounded my-1 max-w-[50%] ${isSender ? "ml-11" : ""}`}>
           This message was deleted
         </div>
       ) : (
-        <div className="relative max-w-[70%] sm:max-w-[50%] flex flex-col">
+        <div className="relative max-w-[70%] sm:max-w-[50%] flex flex-col group/bubble">
           {/* Options Menu on Hover */}
-          {showOptions && (
-            <div className={`absolute top-0 -mt-8 flex items-center gap-2 bg-[#2a2b33] p-1 rounded-md z-10 ${isSender ? "right-0" : "left-0"}`}>
-              <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="text-white/60 hover:text-white"><FiMoreHorizontal /></button>
-              {isSender && <button onClick={() => setIsEditing(true)} className="text-white/60 hover:text-white"><FiEdit2 /></button>}
-              {isSender && <button onClick={handleDelete} className="text-white/60 hover:text-white"><FiTrash2 /></button>}
-              
-              {showEmojiPicker && (
-                <div className="absolute bottom-10 z-[100]">
-                  <EmojiPicker theme="dark" onEmojiClick={handleReact} width={250} height={350} />
-                </div>
-              )}
+          <div className={`absolute -top-3 ${isSender ? "left-0 -translate-x-full pr-2" : "right-0 translate-x-full pl-2"} ${showEmojiPicker ? "flex" : "hidden group-hover/bubble:flex"} items-center z-50`}>
+            <div className="flex items-center gap-1 bg-[#2a2b33] p-1 rounded-md shadow-lg border border-white/10">
+              <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="text-white/60 hover:text-white p-1"><FiMoreHorizontal /></button>
+              {isSender && <button onClick={() => setIsEditing(true)} className="text-white/60 hover:text-white p-1"><FiEdit2 /></button>}
+              {isSender && <button onClick={handleDelete} className="text-white/60 hover:text-white p-1"><FiTrash2 /></button>}
             </div>
-          )}
+            
+            {showEmojiPicker && (
+              <div className="absolute top-10 z-[100]">
+                <EmojiPicker theme="dark" onEmojiClick={handleReact} width={250} height={350} />
+              </div>
+            )}
+          </div>
 
           {isEditing ? (
             <div className="flex flex-col gap-2">
