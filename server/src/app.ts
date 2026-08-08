@@ -16,7 +16,7 @@ import setupSocket from "./socket";
 import messagesRoutes from "./routes/MessagesRoutes";
 import channelRoutes from "./routes/ChannelRoutes";
 import { errorHandler } from "./middleware/ErrorHandler";
-import { errorHandler } from "./middleware/ErrorHandler";
+import { startScheduledMessagesJob } from "./jobs/scheduledMessages";
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -63,6 +63,7 @@ const server = app.listen(port, () => {
 });
 
 setupSocket(server);
+startScheduledMessagesJob();
 
 if (databaseURL) {
   mongoose

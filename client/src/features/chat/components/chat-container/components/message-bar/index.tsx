@@ -20,6 +20,7 @@ const MessageBar = () => {
   } = useAppStore();
   const [message, setMessage] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -114,7 +115,22 @@ const MessageBar = () => {
         className="flex-1 px-3 sm:px-5 py-2 sm:py-3 bg-transparent text-white rounded-md focus:outline-none text-sm sm:text-base"
         placeholder="Enter Message"
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={(e) => {
+          setMessage(e.target.value);
+          
+          // Emit typing event
+          const typingData = {
+            sender: userInfo.id,
+            recipient: selectedChatType === "contact" ? selectedChatData._id : undefined,
+            channelId: selectedChatType === "channel" ? selectedChatData._id : undefined,
+          };
+          socket.emit("typing", typingData);
+
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => {
+            socket.emit("stopTyping", typingData);
+          }, 2000);
+        }}
       />
       <button
         className="text-neutral-500 hover:text-white transition-all duration-300"

@@ -1,15 +1,26 @@
 import { Router } from "express";
 import { verifyToken } from "../middleware/AuthMiddleware";
-import { getMessages, uploadFile } from "../controllers/MessagesController";
-import multer from "multer";
+import { 
+  getMessages, 
+  uploadFile,
+  editMessage,
+  deleteMessage,
+  reactToMessage,
+  pinMessage,
+  starMessage,
+  markAsRead
+} from "../controllers/MessagesController";
+import { uploadAttachment } from "../config/cloudinary";
 
 const messagesRoutes = Router();
-const upload = multer({ dest: "uploads/files" });
+
 messagesRoutes.post("/get-messages", verifyToken, getMessages);
-messagesRoutes.post(
-  "/upload-file",
-  verifyToken,
-  upload.single("file"),
-  uploadFile
-);
+messagesRoutes.post("/upload-file", verifyToken, uploadAttachment.single("file"), uploadFile);
+
+messagesRoutes.patch("/:id/edit", verifyToken, editMessage);
+messagesRoutes.delete("/:id/delete", verifyToken, deleteMessage);
+messagesRoutes.post("/:id/react", verifyToken, reactToMessage);
+messagesRoutes.post("/:id/pin", verifyToken, pinMessage);
+messagesRoutes.post("/:id/star", verifyToken, starMessage);
+messagesRoutes.post("/mark-read", verifyToken, markAsRead);
 export default messagesRoutes;

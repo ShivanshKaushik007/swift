@@ -4,7 +4,9 @@ import { useAppStore } from "@/store";
 import { HOST } from "@/utils/constants";
 import { RiCloseFill } from "react-icons/ri";
 const ChatHeader = () => {
-  const { closeChat, selectedChatData, selectedChatType } = useAppStore();
+  const { closeChat, selectedChatData, selectedChatType, typingStatus } = useAppStore();
+  const currentTyping = typingStatus[selectedChatData?._id] || [];
+  const isTyping = currentTyping.length > 0;
   return (
     <div className="h-[10vh] min-h-[60px] border-b-2 border-[#2f303b] px-4 sm:px-8 md:px-20 flex items-center justify-between">
   {/* Left Section: Avatar + Name */}
@@ -42,6 +44,11 @@ const ChatHeader = () => {
         (selectedChatData.firstName
           ? `${selectedChatData.firstName} ${selectedChatData.lastName}`
           : selectedChatData.email)}
+      {isTyping && (
+        <div className="text-xs text-[#8417ff] animate-pulse">
+          typing...
+        </div>
+      )}
     </div>
   </div>
 

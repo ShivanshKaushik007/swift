@@ -15,6 +15,8 @@ export interface IUser extends Document {
   resetPasswordExpires?: Date;
   authProvider: 'local' | 'google' | 'github';
   oauthId?: string;
+  starredMessages: mongoose.Types.ObjectId[];
+  drafts: { channelOrUser: mongoose.Types.ObjectId; content: string; updatedAt: Date }[];
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -72,6 +74,14 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     required: false,
   },
+  starredMessages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Messages" }],
+  drafts: [
+    {
+      channelOrUser: { type: mongoose.Schema.Types.ObjectId, required: true },
+      content: { type: String, required: true },
+      updatedAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 userSchema.pre("save", async function (next) {

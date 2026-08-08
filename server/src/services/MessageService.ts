@@ -8,14 +8,88 @@ export class MessageService {
   }
 
   async uploadFile(file: Express.Multer.File) {
-    const date = Date.now();
-    const fileDir = `uploads/files/${date}`;
-    const fileName = `${fileDir}/${file.originalname}`;
+    // With multer-storage-cloudinary, file.path is the remote URL
+    return file.path;
+  }
 
-    mkdirSync(fileDir, { recursive: true });
-    renameSync(file.path, fileName);
+  async editMessage(messageId: string, userId: string, newContent: string) {
+    const message = await MessageRepository.findById(messageId);
+    if (!message) throw new Error("Message not found");
+    if (message.sender.toString() !== userId) throw new Error("Unauthorized");
+    if (message.deletedAt) throw new Error("Cannot edit a deleted message");
 
-    return fileName;
+    message.content = newContent;
+    message.isEdited = true;
+    return await message.save();
+  }
+
+  async deleteMessage(messageId: string, userId: string) {
+    const message = await MessageRepository.findById(messageId);
+    if (!message) throw new Error("Message not found");
+    if (message.sender.toString() !== userId) throw new Error("Unauthorized");
+    
+    message.deletedAt = new Date();
+    message.content = undefined; // Scrub content
+    message.attachments = [];
+    return await message.save();
+  }
+
+  async reactToMessage(messageId: string, userId: string, emoji: string) {
+    const message = await MessageRepository.findById(messageId);
+    if (!message) throw new Error("Message not found");
+
+    const reactionIndex = message.reactions.findIndex(r => r.emoji === emoji);
+    if (reactionIndex > -1) {
+      const userIndex = message.reactions[reactionIndex].users.findIndex(id => id.toString() === userId);
+      if (userIndex > -1) {
+        message.reactions[reactionIndex].users.splice(userIndex, 1);
+        if (message.reactions[reactionIndex].users.length === 0) {
+          message.reactions.splice(reactionIndex, 1);
+        }
+      } else {
+        message.reactions[reactionIndex].users.push(userId as any);
+      }
+    } else {
+      message.reactions.push({ emoji, users: [userId as any] });
+    }
+    
+    return await message.save();
+  }
+
+  async pinMessage(messageId: string, isPinned: boolean) {
+    const message = await MessageRepository.findById(messageId);
+    if (!message) throw new Error("Message not found");
+    message.isPinned = isPinned;
+    return await message.save();
+  }
+
+  async toggleStarMessage(messageId: string, userId: string) {
+    const user = await UserRepository.findById(userId);
+    if (!user) throw new Error("User not found");
+    
+    const index = user.starredMessages.findIndex(id => id.toString() === messageId);
+    if (index > -1) {
+      user.starredMessages.splice(index, 1);
+    } else {
+      user.starredMessages.push(messageId as any);
+    }
+    await user.save();
+    return user.starredMessages;
+  }
+
+  async markMessagesAsRead(messageIds: string[], userId: string) {
+    // This could be optimized into a single updateMany, but this is explicit
+    const updatedMessages = [];
+    for (const msgId of messageIds) {
+      const msg = await MessageRepository.findById(msgId);
+      if (msg && !msg.readBy.some(read => read.user.toString() === userId)) {
+        msg.readBy.push({ user: userId as any, readAt: new Date() });
+        msg.status = "read";
+        await msg.save();
+        updatedMessages.push(msg);
+      }
+    }
+    return updatedMessages;
   }
 }
 

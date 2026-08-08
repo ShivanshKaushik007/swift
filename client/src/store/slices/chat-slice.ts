@@ -8,7 +8,12 @@ export const createChatSlice = (set, get) => ({
   fileUploadProgress: 0,
   fileDownloadProgress: 0,
   channels: [],
+  typingStatus: {}, // { chatId: [userIds] }
   setChannels: (channels) => set({ channels }),
+  setTypingStatus: (chatId, userIds) => {
+    const typingStatus = get().typingStatus;
+    set({ typingStatus: { ...typingStatus, [chatId]: userIds } });
+  },
   setIsUploading: (isUploading) => set({ isUploading }),
   setIsDownloading: (isDownloading) => set({ isDownloading }),
   setFileUploadProgress: (fileUploadProgress) => set({ fileUploadProgress }),
@@ -50,6 +55,29 @@ export const createChatSlice = (set, get) => ({
         },
       ],
     });
+  },
+  updateMessage: (updatedMessage) => {
+    const messages = get().selectedChatMessages;
+    const index = messages.findIndex((m) => m._id === updatedMessage._id);
+    if (index !== -1) {
+      const newMessages = [...messages];
+      newMessages[index] = updatedMessage;
+      set({ selectedChatMessages: newMessages });
+    }
+  },
+  markMessagesAsReadInState: (messageId, readerId) => {
+    const messages = get().selectedChatMessages;
+    const index = messages.findIndex((m) => m._id === messageId);
+    if (index !== -1) {
+      const newMessages = [...messages];
+      const msg = newMessages[index];
+      if (!msg.readBy) msg.readBy = [];
+      if (!msg.readBy.some(read => read.user === readerId)) {
+        msg.readBy.push({ user: readerId, readAt: new Date() });
+        msg.status = "read";
+      }
+      set({ selectedChatMessages: newMessages });
+    }
   },
   addChannelInChannelList: (message) => {
     const channels = get().channels;

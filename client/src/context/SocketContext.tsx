@@ -53,6 +53,45 @@ export const SocketProvider = ({ children }) => {
 
       socket.current.on("receiveMessage", handleReceiveMessage);
       socket.current.on("recieve-channel-message", handleReceiveChannelMessage);
+
+      // Phase 3 Listeners
+      socket.current.on("typing", ({ sender, channelId }) => {
+        const { setTypingStatus, typingStatus } = useAppStore.getState();
+        const chatId = channelId || sender;
+        const currentTyping = typingStatus[chatId] || [];
+        if (!currentTyping.includes(sender)) {
+          setTypingStatus(chatId, [...currentTyping, sender]);
+        }
+      });
+
+      socket.current.on("stopTyping", ({ sender, channelId }) => {
+        const { setTypingStatus, typingStatus } = useAppStore.getState();
+        const chatId = channelId || sender;
+        const currentTyping = typingStatus[chatId] || [];
+        setTypingStatus(chatId, currentTyping.filter(id => id !== sender));
+      });
+
+      socket.current.on("messageEdited", (updatedMessage) => {
+        const { updateMessage } = useAppStore.getState();
+        updateMessage(updatedMessage);
+      });
+
+      socket.current.on("messageDeleted", (deletedMessage) => {
+        const { updateMessage } = useAppStore.getState();
+        updateMessage(deletedMessage);
+      });
+
+      socket.current.on("messageReaction", (reactionData) => {
+        // reactionData is the updated message or reaction object
+        const { updateMessage } = useAppStore.getState();
+        updateMessage(reactionData); // assuming server sends back the updated message
+      });
+
+      socket.current.on("messageRead", ({ messageId, reader }) => {
+        const { markMessagesAsReadInState } = useAppStore.getState();
+        markMessagesAsReadInState(messageId, reader);
+      });
+
       return () => {
         socket.current.disconnect();
       };

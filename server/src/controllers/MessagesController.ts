@@ -30,3 +30,66 @@ export const uploadFile = async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 };
+
+export const editMessage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+    const message = await messageService.editMessage(id, req.userId!, content);
+    return res.status(200).json({ message });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteMessage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const message = await messageService.deleteMessage(id, req.userId!);
+    return res.status(200).json({ message });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reactToMessage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { emoji } = req.body;
+    const message = await messageService.reactToMessage(id, req.userId!, emoji);
+    return res.status(200).json({ message });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const pinMessage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { isPinned } = req.body;
+    const message = await messageService.pinMessage(id, isPinned);
+    return res.status(200).json({ message });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const starMessage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const starredMessages = await messageService.toggleStarMessage(id, req.userId!);
+    return res.status(200).json({ starredMessages });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markAsRead = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { messageIds } = req.body;
+    const messages = await messageService.markMessagesAsRead(messageIds, req.userId!);
+    return res.status(200).json({ messages });
+  } catch (error) {
+    next(error);
+  }
+};
