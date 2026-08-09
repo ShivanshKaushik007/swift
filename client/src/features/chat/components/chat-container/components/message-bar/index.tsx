@@ -134,7 +134,7 @@ const MessageBar = () => {
     }
   };
   return (
-    <div className="w-full px-4 sm:px-8 mb-6 flex flex-col gap-2">
+    <div className="relative w-full px-4 sm:px-8 mb-6 flex flex-col gap-2">
       {replyMessage && (
         <div className="w-full bg-[#1c1d25] p-3 rounded-md flex items-center justify-between border-l-4 border-[#8417ff]">
           <div className="flex flex-col">
@@ -146,7 +146,7 @@ const MessageBar = () => {
       )}
   
   {showMentions && selectedChatType === "channel" && selectedChatData.members && (
-    <div className="absolute bottom-24 left-4 sm:left-8 bg-[#2a2b33] rounded-md shadow-lg border border-white/10 overflow-hidden z-50 w-[250px]">
+    <div className="absolute bottom-full left-4 sm:left-8 mb-2 bg-[#2a2b33] rounded-md shadow-lg border border-white/10 overflow-hidden z-[100] w-[250px]">
       <div className="px-3 py-2 text-xs font-semibold text-white/50 border-b border-white/10 bg-[#1c1d25]">Members</div>
       <div className="max-h-[200px] overflow-y-auto">
         {selectedChatData.members
@@ -215,6 +215,13 @@ const MessageBar = () => {
           typingTimeoutRef.current = setTimeout(() => {
             socket.emit("stopTyping", typingData);
           }, 2000);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            if (!showMentions) {
+              handleSendMessage();
+            }
+          }
         }}
       />
       <button

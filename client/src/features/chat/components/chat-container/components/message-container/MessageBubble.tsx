@@ -103,7 +103,8 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
 
   return (
     <div 
-      className={`relative group mt-5 ${isSender ? "text-right flex flex-col items-end" : "text-left flex flex-col items-start"}`}
+      id={`message-${message._id}`}
+      className={`relative group mt-5 ${isSender ? "text-right flex flex-col items-end" : "text-left flex flex-col items-start"} transition-colors duration-500`}
     >
       {message.deletedAt ? (
         <div className={`italic text-xs text-white/40 border inline-block p-4 rounded my-1 max-w-[50%] ${isSender ? "ml-11" : ""}`}>

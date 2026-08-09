@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getColor } from "@/lib/utils";
 import { MessageBubble } from "./MessageBubble";
 import { useSocket } from "@/context/SocketContext";
+import { AiOutlinePushpin } from "react-icons/ai";
 
 const MessageContainer = () => {
   const scrollRef = useRef();
@@ -28,6 +29,20 @@ const MessageContainer = () => {
   } = useAppStore();
   const [showImage, setShowImage] = useState(false);
   const [imageURL, setImageURL] = useState(null);
+
+  const pinnedMessages = selectedChatMessages.filter(m => m.isPinned);
+  const latestPinnedMessage = pinnedMessages[pinnedMessages.length - 1];
+
+  const handleScrollToMessage = (messageId) => {
+    const el = document.getElementById(`message-${messageId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('bg-[#8417ff]/20', 'rounded-lg', 'p-2');
+      setTimeout(() => {
+        el.classList.remove('bg-[#8417ff]/20', 'rounded-lg', 'p-2');
+      }, 1500);
+    }
+  };
 
   useEffect(() => {
     const getMessages = async () => {
@@ -142,7 +157,35 @@ const MessageContainer = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto scrollbar-hidden p-4 px-8 md:w-[65dvw] lg:w-[70dvw] xl:w-[80dvw] w-full  ">
+    <div className="relative flex-1 overflow-y-auto scrollbar-hidden p-4 px-8 md:w-[65dvw] lg:w-[70dvw] xl:w-[80dvw] w-full  ">
+      {latestPinnedMessage && (
+        <div 
+          onClick={() => handleScrollToMessage(latestPinnedMessage._id)}
+          className="sticky top-0 z-40 w-full bg-[#2a2b33]/90 backdrop-blur-sm border-l-4 border-[#8417ff] rounded-md shadow-md p-3 flex items-center justify-between cursor-pointer hover:bg-[#2a2b33] transition-colors mb-4"
+        >
+          <div className="flex items-center gap-3 overflow-hidden">
+            <AiOutlinePushpin className="text-[#8417ff] text-xl flex-shrink-0" />
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-xs text-[#8417ff] font-semibold">Pinned Message</span>
+              <span className="text-sm text-white/80 truncate max-w-[200px] sm:max-w-md">
+                {latestPinnedMessage.messageType === "text" ? latestPinnedMessage.content : "Attachment"}
+              </span>
+            </div>
+          </div>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              apiClient.post(`/api/v1/messages/${latestPinnedMessage._id}/pin`, { isPinned: false }, { withCredentials: true })
+                .then(res => socket && socket.emit("messageEdited", res.data.message))
+                .catch(console.error);
+            }} 
+            className="text-white/40 hover:text-white transition-colors"
+          >
+            <IoCloseSharp className="text-xl" />
+          </button>
+        </div>
+      )}
+      
       {renderMessages()}
       <div ref={scrollRef} />
       {showImage && (
