@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAppStore } from "@/store";
+import { useSocket } from "@/context/SocketContext";
 import { HOST } from "@/utils/constants";
 import moment from "moment";
 import { MdFolderZip } from "react-icons/md";
@@ -27,7 +28,8 @@ const getFileUrl = (url) => {
 };
 
 export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
-  const { userInfo, selectedChatType, selectedChatData } = useAppStore();
+  const socket = useSocket();
+  const { userInfo, selectedChatType, selectedChatData, updateMessage } = useAppStore();
   const [showOptions, setShowOptions] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -42,8 +44,10 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
   const handleEdit = async () => {
     if (editContent === message.content) return setIsEditing(false);
     try {
-      await apiClient.patch(`/api/v1/messages/${message._id}/edit`, { content: editContent }, { withCredentials: true });
+      const response = await apiClient.patch(`/api/v1/messages/${message._id}/edit`, { content: editContent }, { withCredentials: true });
       setIsEditing(false);
+      updateMessage(response.data.message);
+      if (socket) socket.emit("messageEdited", response.data.message);
     } catch (e) {
       console.error(e);
     }
@@ -51,7 +55,9 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
 
   const handleDelete = async () => {
     try {
-      await apiClient.delete(`/api/v1/messages/${message._id}/delete`, { withCredentials: true });
+      const response = await apiClient.delete(`/api/v1/messages/${message._id}/delete`, { withCredentials: true });
+      updateMessage(response.data.message);
+      if (socket) socket.emit("messageDeleted", response.data.message);
     } catch (e) {
       console.error(e);
     }
@@ -60,7 +66,9 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
   const handleReact = async (emoji) => {
     try {
       setShowEmojiPicker(false);
-      await apiClient.post(`/api/v1/messages/${message._id}/react`, { emoji: emoji.emoji }, { withCredentials: true });
+      const response = await apiClient.post(`/api/v1/messages/${message._id}/react`, { emoji: emoji.emoji }, { withCredentials: true });
+      updateMessage(response.data.message);
+      if (socket) socket.emit("messageReaction", response.data.message);
     } catch (e) {
       console.error(e);
     }

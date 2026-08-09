@@ -61,7 +61,17 @@ export const createChatSlice = (set, get) => ({
     const index = messages.findIndex((m) => m._id === updatedMessage._id);
     if (index !== -1) {
       const newMessages = [...messages];
-      newMessages[index] = updatedMessage;
+      const merged = { ...newMessages[index], ...updatedMessage };
+      
+      // Preserve populated sender/recipient if they were objects
+      if (newMessages[index].sender && typeof newMessages[index].sender === 'object') {
+        merged.sender = newMessages[index].sender;
+      }
+      if (newMessages[index].recipient && typeof newMessages[index].recipient === 'object') {
+        merged.recipient = newMessages[index].recipient;
+      }
+      
+      newMessages[index] = merged;
       set({ selectedChatMessages: newMessages });
     }
   },
