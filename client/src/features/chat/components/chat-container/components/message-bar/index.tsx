@@ -7,6 +7,9 @@ import { useEffect, useRef, useState } from "react";
 import { GrAttachment } from "react-icons/gr";
 import { IoSend } from "react-icons/io5";
 import { RiEmojiStickerLine } from "react-icons/ri";
+import { IoCloseSharp } from "react-icons/io5";
+import { HOST } from "@/utils/constants";
+
 const MessageBar = () => {
   const emojiRef = useRef();
   const fileInputRef = useRef();
@@ -17,10 +20,26 @@ const MessageBar = () => {
     userInfo,
     setIsUploading,
     setFileUploadProgress,
+    replyMessage,
+    setReplyMessage,
   } = useAppStore();
   const [message, setMessage] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [selectedMentions, setSelectedMentions] = useState([]);
   const typingTimeoutRef = useRef(null);
+
+  // Draft Messages Logic
+  const draftKey = `draft_${selectedChatData?._id}`;
+  
+  useEffect(() => {
+    if (selectedChatData) {
+      const savedDraft = localStorage.getItem(draftKey);
+      if (savedDraft) setMessage(savedDraft);
+      else setMessage("");
+    }
+  }, [selectedChatData]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -45,6 +64,7 @@ const MessageBar = () => {
         recipient: selectedChatData._id,
         messageType: "text",
         fileUrl: undefined,
+        replyTo: replyMessage ? replyMessage._id : undefined,
       });
 
     } else if (selectedChatType === "channel") {
@@ -54,9 +74,14 @@ const MessageBar = () => {
         messageType: "text",
         fileUrl: undefined,
         channelId: selectedChatData._id,
+        replyTo: replyMessage ? replyMessage._id : undefined,
+        mentions: selectedMentions,
       });
     }
-    setMessage((msg) => "");
+    setMessage("");
+    localStorage.removeItem(draftKey);
+    setReplyMessage(null);
+    setSelectedMentions([]);
   };
 
   const handleAttachmentClick = () => {
@@ -87,6 +112,7 @@ const MessageBar = () => {
               recipient: selectedChatData._id,
               messageType: "file",
               fileUrl: response.data.filePath,
+              replyTo: replyMessage ? replyMessage._id : undefined,
             });
           } else if (selectedChatType === "channel") {
             socket.emit("send-channel-message", {
@@ -95,8 +121,10 @@ const MessageBar = () => {
               messageType: "file",
               fileUrl: response.data.filePath,
               channelId: selectedChatData._id,
+              replyTo: replyMessage ? replyMessage._id : undefined,
             });
           }
+          setReplyMessage(null);
         }
       }
       console.log({ file });
@@ -106,7 +134,47 @@ const MessageBar = () => {
     }
   };
   return (
-    <div className="w-full px-4 sm:px-8 mb-6">
+    <div className="w-full px-4 sm:px-8 mb-6 flex flex-col gap-2">
+      {replyMessage && (
+        <div className="w-full bg-[#1c1d25] p-3 rounded-md flex items-center justify-between border-l-4 border-[#8417ff]">
+          <div className="flex flex-col">
+            <span className="text-xs text-[#8417ff] font-semibold">Replying to {replyMessage.sender?.firstName || replyMessage.sender?.email || "User"}</span>
+            <span className="text-sm text-white/60 truncate max-w-[200px] sm:max-w-md">{replyMessage.messageType === "text" ? replyMessage.content : "File attachment"}</span>
+          </div>
+          <button onClick={() => setReplyMessage(null)} className="text-white/60 hover:text-white transition-all"><IoCloseSharp className="text-xl" /></button>
+        </div>
+      )}
+  
+  {showMentions && selectedChatType === "channel" && selectedChatData.members && (
+    <div className="absolute bottom-24 left-4 sm:left-8 bg-[#2a2b33] rounded-md shadow-lg border border-white/10 overflow-hidden z-50 w-[250px]">
+      <div className="px-3 py-2 text-xs font-semibold text-white/50 border-b border-white/10 bg-[#1c1d25]">Members</div>
+      <div className="max-h-[200px] overflow-y-auto">
+        {selectedChatData.members
+          .filter(m => (m.firstName + " " + m.lastName).toLowerCase().includes(mentionQuery) || m.email?.toLowerCase().includes(mentionQuery))
+          .map(member => (
+            <div 
+              key={member._id}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 cursor-pointer transition-all"
+              onClick={() => {
+                const val = message;
+                const lastAt = val.lastIndexOf("@");
+                const newVal = val.slice(0, lastAt) + `@${member.firstName || member.email} ` ;
+                setMessage(newVal);
+                setShowMentions(false);
+                if (!selectedMentions.includes(member._id)) {
+                  setSelectedMentions([...selectedMentions, member._id]);
+                }
+              }}
+            >
+              <div className="h-6 w-6 rounded-full bg-[#8417ff] flex items-center justify-center text-xs uppercase overflow-hidden">
+                {member.image ? <img src={`${HOST}/${member.image}`} className="w-full h-full object-cover"/> : member.firstName?.charAt(0) || member.email?.charAt(0)}
+              </div>
+              <span className="text-sm">{member.firstName} {member.lastName}</span>
+            </div>
+        ))}
+      </div>
+    </div>
+  )}
   <div className="h-[10dvh] max-h-20 min-h-[60px] w-full bg-[#1c1d25] flex justify-center items-center gap-3 sm:gap-6 rounded-md">
     {/* Input & tools container */}
     <div className="flex-1 flex bg-[#2a2b33] rounded-md items-center gap-2 sm:gap-5 pr-2 sm:pr-5 ">
@@ -116,7 +184,24 @@ const MessageBar = () => {
         placeholder="Enter Message"
         value={message}
         onChange={(e) => {
-          setMessage(e.target.value);
+          const val = e.target.value;
+          setMessage(val);
+          localStorage.setItem(draftKey, val);
+          
+          if (selectedChatType === "channel") {
+            const lastAt = val.lastIndexOf("@");
+            if (lastAt !== -1) {
+              const query = val.slice(lastAt + 1);
+              if (!query.includes(" ")) {
+                setShowMentions(true);
+                setMentionQuery(query.toLowerCase());
+              } else {
+                setShowMentions(false);
+              }
+            } else {
+              setShowMentions(false);
+            }
+          }
           
           // Emit typing event
           const typingData = {

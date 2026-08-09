@@ -18,6 +18,16 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
+export const getThreadMessages = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const messages = await messageService.getThreadMessages(id);
+    return res.status(200).json({ messages });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const uploadFile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.file) {

@@ -8,6 +8,13 @@ export class MessageService {
     return await MessageRepository.getMessagesBetweenUsers(user1, user2);
   }
 
+  async getThreadMessages(threadId: string) {
+    return await Message.find({ threadId })
+      .sort({ timestamp: 1 })
+      .populate("sender", "id email firstName lastName image color")
+      .populate("recipient", "id email firstName lastName image color");
+  }
+
   async uploadFile(file: Express.Multer.File) {
     // With multer-storage-cloudinary, file.path is the remote URL
     return file.path;

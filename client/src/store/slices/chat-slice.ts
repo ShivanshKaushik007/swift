@@ -9,6 +9,10 @@ export const createChatSlice = (set, get) => ({
   fileDownloadProgress: 0,
   channels: [],
   typingStatus: {}, // { chatId: [userIds] }
+  replyMessage: null,
+  setReplyMessage: (message) => set({ replyMessage: message }),
+  activeThread: null,
+  setActiveThread: (thread) => set({ activeThread: thread }),
   setChannels: (channels) => set({ channels }),
   setTypingStatus: (chatId, userIds) => {
     const typingStatus = get().typingStatus;

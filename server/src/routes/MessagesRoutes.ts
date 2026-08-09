@@ -2,6 +2,7 @@ import { Router } from "express";
 import { verifyToken } from "../middleware/AuthMiddleware";
 import { 
   getMessages, 
+  getThreadMessages,
   uploadFile,
   editMessage,
   deleteMessage,
@@ -15,6 +16,7 @@ import { uploadAttachment } from "../config/cloudinary";
 const messagesRoutes = Router();
 
 messagesRoutes.post("/get-messages", verifyToken, getMessages);
+messagesRoutes.get("/thread/:id", verifyToken, getThreadMessages);
 messagesRoutes.post("/upload-file", verifyToken, uploadAttachment.single("file"), uploadFile);
 
 messagesRoutes.patch("/:id/edit", verifyToken, editMessage);

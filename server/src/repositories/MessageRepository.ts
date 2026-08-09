@@ -8,7 +8,14 @@ class MessageRepository {
         { sender: user1, recipient: user2 },
         { sender: user2, recipient: user1 },
       ],
-    }).sort({ timestamp: 1 });
+    }).sort({ timestamp: 1 })
+      .populate("sender", "id email firstName lastName image color")
+      .populate("recipient", "id email firstName lastName image color")
+      .populate({
+        path: "replyTo",
+        select: "content sender messageType fileUrl",
+        populate: { path: "sender", select: "firstName lastName email color" }
+      });
   }
 
   async getContactsForDMList(userId: string): Promise<any[]> {

@@ -34,7 +34,12 @@ const setupSocket = (server: HttpServer) => {
     const createdMessage = await Message.create(message);
     const messageData = await Message.findById(createdMessage._id)
       .populate("sender", "id email firstName lastName image color")
-      .populate("recipient", "id email firstName lastName image color");
+      .populate("recipient", "id email firstName lastName image color")
+      .populate({
+        path: "replyTo",
+        select: "content sender messageType fileUrl",
+        populate: { path: "sender", select: "firstName lastName email color" }
+      });
 
     if (recipientSocketId) {
       io.to(recipientSocketId).emit("receiveMessage", messageData);
@@ -45,7 +50,7 @@ const setupSocket = (server: HttpServer) => {
   };
 
   const sendChannelMessage = async (message: any) => {
-    const { channelId, sender, content, messageType, fileUrl } = message;
+    const { channelId, sender, content, messageType, fileUrl, replyTo, mentions } = message;
     
     const createdMessage = await Message.create({
       sender,
@@ -54,10 +59,17 @@ const setupSocket = (server: HttpServer) => {
       messageType,
       timestamp: new Date(),
       fileUrl,
+      replyTo,
+      mentions,
     });
     
     const messageData = await Message.findById(createdMessage._id)
       .populate("sender", "id email firstName lastName image color")
+      .populate({
+        path: "replyTo",
+        select: "content sender messageType fileUrl",
+        populate: { path: "sender", select: "firstName lastName email color" }
+      })
       .exec();
 
     await Channel.findByIdAndUpdate(channelId, {
