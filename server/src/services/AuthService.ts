@@ -76,7 +76,8 @@ export class AuthService {
         lastName: user.lastName,
         image: user.image,
         color: user.color,
-        isEmailVerified: user.isEmailVerified
+        isEmailVerified: user.isEmailVerified,
+        starredMessages: user.starredMessages || []
       },
       accessToken,
       refreshToken,
@@ -97,7 +98,8 @@ export class AuthService {
       lastName: user.lastName,
       image: user.image,
       color: user.color,
-      isEmailVerified: user.isEmailVerified
+      isEmailVerified: user.isEmailVerified,
+      starredMessages: user.starredMessages || []
     };
   }
 

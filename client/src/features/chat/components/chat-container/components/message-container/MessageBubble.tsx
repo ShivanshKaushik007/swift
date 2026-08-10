@@ -36,7 +36,7 @@ const getFileUrl = (url) => {
 
 export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
   const socket = useSocket();
-  const { userInfo, selectedChatType, selectedChatData, updateMessage, setReplyMessage, setActiveThread } = useAppStore();
+  const { userInfo, setUserInfo, selectedChatType, selectedChatData, updateMessage, setReplyMessage, setActiveThread, selectedChatMessages } = useAppStore();
   const [showOptions, setShowOptions] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -104,13 +104,14 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
 
   const handleStar = async () => {
     try {
-      // For starring, it's user-specific, no need to broadcast to other users
-      await apiClient.post(`/api/v1/messages/${message._id}/star`, {}, { withCredentials: true });
-      // In a full implementation, we'd add it to a local list of starred messages
+      const response = await apiClient.post(`/api/v1/messages/${message._id}/star`, {}, { withCredentials: true });
+      setUserInfo({ ...userInfo, starredMessages: response.data.starredMessages });
     } catch (e) {
       console.error(e);
     }
   };
+
+  const isStarred = userInfo?.starredMessages?.includes(message._id);
 
   return (
     <div 
@@ -136,7 +137,7 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
               <button onClick={() => setReplyMessage(message)} className="text-white/60 hover:text-white p-1"><FiCornerUpLeft /></button>
               <button onClick={() => setActiveThread(message)} className="text-white/60 hover:text-white p-1"><FiMessageSquare /></button>
               <button onClick={handlePin} className={`${message.isPinned ? "text-[#8417ff]" : "text-white/60"} hover:text-white p-1`}><AiOutlinePushpin /></button>
-              <button onClick={handleStar} className={`text-white/60 hover:text-yellow-400 p-1`}><FiStar /></button>
+              <button onClick={handleStar} className={`${isStarred ? "text-yellow-400" : "text-white/60"} hover:text-yellow-400 p-1`}><FiStar /></button>
               {isSender && <button onClick={() => setIsEditing(true)} className="text-white/60 hover:text-white p-1"><FiEdit2 /></button>}
               {isSender && <button onClick={handleDelete} className="text-white/60 hover:text-white p-1"><FiTrash2 /></button>}
             </div>
@@ -233,6 +234,7 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
           {moment(message.timestamp).format("LT")}
         </span>
         {message.isEdited && !message.deletedAt && <span className="text-xs text-white/40">(edited)</span>}
+        {isStarred && <FiStar className="text-yellow-400 text-xs" />}
         
         {/* Read Receipts */}
         {isSender && (

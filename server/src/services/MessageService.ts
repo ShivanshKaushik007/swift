@@ -28,7 +28,14 @@ export class MessageService {
 
     message.content = newContent;
     message.isEdited = true;
-    return await message.save();
+    await message.save();
+    return await Message.findById(messageId)
+      .populate("sender", "id email firstName lastName image color")
+      .populate({
+        path: "replyTo",
+        select: "content sender messageType fileUrl",
+        populate: { path: "sender", select: "firstName lastName email color" }
+      });
   }
 
   async deleteMessage(messageId: string, userId: string) {
@@ -39,7 +46,14 @@ export class MessageService {
     message.deletedAt = new Date();
     message.content = undefined; // Scrub content
     message.attachments = [];
-    return await message.save();
+    await message.save();
+    return await Message.findById(messageId)
+      .populate("sender", "id email firstName lastName image color")
+      .populate({
+        path: "replyTo",
+        select: "content sender messageType fileUrl",
+        populate: { path: "sender", select: "firstName lastName email color" }
+      });
   }
 
   async reactToMessage(messageId: string, userId: string, emoji: string) {
@@ -61,14 +75,28 @@ export class MessageService {
       message.reactions.push({ emoji, users: [userId as any] });
     }
     
-    return await message.save();
+    await message.save();
+    return await Message.findById(messageId)
+      .populate("sender", "id email firstName lastName image color")
+      .populate({
+        path: "replyTo",
+        select: "content sender messageType fileUrl",
+        populate: { path: "sender", select: "firstName lastName email color" }
+      });
   }
 
   async pinMessage(messageId: string, isPinned: boolean) {
     const message = await Message.findById(messageId);
     if (!message) throw new Error("Message not found");
     message.isPinned = isPinned;
-    return await message.save();
+    await message.save();
+    return await Message.findById(messageId)
+      .populate("sender", "id email firstName lastName image color")
+      .populate({
+        path: "replyTo",
+        select: "content sender messageType fileUrl",
+        populate: { path: "sender", select: "firstName lastName email color" }
+      });
   }
 
   async toggleStarMessage(messageId: string, userId: string) {
