@@ -83,6 +83,17 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
 
   const handlePin = async () => {
     try {
+      if (!message.isPinned) {
+        const pinnedMessages = selectedChatMessages.filter(m => m.isPinned);
+        if (pinnedMessages.length >= 3) {
+          // If we already have 3 pins, automatically unpin the oldest one
+          const oldestPinned = pinnedMessages[0];
+          const unpinRes = await apiClient.post(`/api/v1/messages/${oldestPinned._id}/pin`, { isPinned: false }, { withCredentials: true });
+          updateMessage(unpinRes.data.message);
+          if (socket) socket.emit("messageEdited", unpinRes.data.message);
+        }
+      }
+
       const response = await apiClient.post(`/api/v1/messages/${message._id}/pin`, { isPinned: !message.isPinned }, { withCredentials: true });
       updateMessage(response.data.message);
       if (socket) socket.emit("messageEdited", response.data.message);

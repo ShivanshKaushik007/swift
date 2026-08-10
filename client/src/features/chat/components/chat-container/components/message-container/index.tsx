@@ -26,12 +26,23 @@ const MessageContainer = () => {
     setSelectedChatMessages,
     setFileDownloadProgress,
     setIsDownloading,
+    updateMessage,
   } = useAppStore();
   const [showImage, setShowImage] = useState(false);
   const [imageURL, setImageURL] = useState(null);
+  const [pinnedIndex, setPinnedIndex] = useState(0);
 
   const pinnedMessages = selectedChatMessages.filter(m => m.isPinned);
-  const latestPinnedMessage = pinnedMessages[pinnedMessages.length - 1];
+  
+  // Ensure pinnedIndex is within bounds if a message is unpinned
+  useEffect(() => {
+    if (pinnedIndex >= pinnedMessages.length && pinnedMessages.length > 0) {
+      setPinnedIndex(pinnedMessages.length - 1);
+    }
+  }, [pinnedMessages.length, pinnedIndex]);
+
+  // Display message from newest to oldest based on pinnedIndex
+  const displayMessage = pinnedMessages[pinnedMessages.length - 1 - (pinnedIndex % pinnedMessages.length)] || pinnedMessages[0];
 
   const handleScrollToMessage = (messageId) => {
     const el = document.getElementById(`message-${messageId}`);
@@ -157,32 +168,52 @@ const MessageContainer = () => {
   };
 
   return (
-    <div className="relative flex-1 overflow-y-auto scrollbar-hidden p-4 px-8 md:w-[65dvw] lg:w-[70dvw] xl:w-[80dvw] w-full  ">
-      {latestPinnedMessage && (
+    <div className="relative flex-1 overflow-y-auto scrollbar-hidden p-4 px-8 w-full">
+      {displayMessage && (
         <div 
-          onClick={() => handleScrollToMessage(latestPinnedMessage._id)}
+          onClick={() => {
+            handleScrollToMessage(displayMessage._id);
+            if (pinnedMessages.length > 1) {
+              setPinnedIndex((prev) => (prev + 1) % pinnedMessages.length);
+            }
+          }}
           className="sticky top-0 z-40 w-full bg-[#2a2b33]/90 backdrop-blur-sm border-l-4 border-[#8417ff] rounded-md shadow-md p-3 flex items-center justify-between cursor-pointer hover:bg-[#2a2b33] transition-colors mb-4"
         >
-          <div className="flex items-center gap-3 overflow-hidden">
+          <div className="flex items-center gap-3 overflow-hidden flex-1">
             <AiOutlinePushpin className="text-[#8417ff] text-xl flex-shrink-0" />
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-xs text-[#8417ff] font-semibold">Pinned Message</span>
+            <div className="flex flex-col overflow-hidden flex-1">
+              <span className="text-xs text-[#8417ff] font-semibold">
+                Pinned Message {pinnedMessages.length > 1 && `(${pinnedIndex + 1}/${pinnedMessages.length})`}
+              </span>
               <span className="text-sm text-white/80 truncate max-w-[200px] sm:max-w-md">
-                {latestPinnedMessage.messageType === "text" ? latestPinnedMessage.content : "Attachment"}
+                {displayMessage.messageType === "text" ? displayMessage.content : "Attachment"}
               </span>
             </div>
           </div>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              apiClient.post(`/api/v1/messages/${latestPinnedMessage._id}/pin`, { isPinned: false }, { withCredentials: true })
-                .then(res => socket && socket.emit("messageEdited", res.data.message))
-                .catch(console.error);
-            }} 
-            className="text-white/40 hover:text-white transition-colors"
-          >
-            <IoCloseSharp className="text-xl" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Multi-pin indicators */}
+            {pinnedMessages.length > 1 && (
+              <div className="flex flex-col gap-[2px] mr-2">
+                {pinnedMessages.map((_, i) => (
+                  <div key={i} className={`w-1 h-1 rounded-full ${i === pinnedIndex ? 'bg-[#8417ff]' : 'bg-white/20'}`} />
+                ))}
+              </div>
+            )}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                apiClient.post(`/api/v1/messages/${displayMessage._id}/pin`, { isPinned: false }, { withCredentials: true })
+                  .then(res => {
+                    updateMessage(res.data.message);
+                    if (socket) socket.emit("messageEdited", res.data.message);
+                  })
+                  .catch(console.error);
+              }} 
+              className="text-white/40 hover:text-white transition-colors p-1"
+            >
+              <IoCloseSharp className="text-xl" />
+            </button>
+          </div>
         </div>
       )}
       
