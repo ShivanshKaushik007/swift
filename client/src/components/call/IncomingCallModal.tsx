@@ -4,9 +4,9 @@ import { useWebRTC } from "@/context/WebRTCContext";
 import { FiPhone, FiPhoneOff, FiVideo, FiMic, FiMicOff, FiVideoOff } from "react-icons/fi";
 
 const IncomingCallModal = () => {
-  const { callData, answerCall, rejectCall } = useWebRTC();
+  const { callData, answerCall, rejectCall, callAccepted } = useWebRTC();
 
-  if (!callData || !callData.isReceivingCall) return null;
+  if (!callData || !callData.isReceivingCall || callAccepted) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center backdrop-blur-sm">
