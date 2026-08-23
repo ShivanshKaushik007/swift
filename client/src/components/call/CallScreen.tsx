@@ -2,6 +2,8 @@
 import React, { useEffect, useRef } from "react";
 import { useWebRTC } from "@/context/WebRTCContext";
 import { FiMic, FiMicOff, FiVideo, FiVideoOff, FiPhoneOff } from "react-icons/fi";
+import { useAppStore } from "@/store";
+import { getImageUrl } from "@/lib/utils";
 
 const CallScreen = () => {
   const {
@@ -17,8 +19,15 @@ const CallScreen = () => {
     callData
   } = useWebRTC();
 
+  const { selectedChatData } = useAppStore();
+
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  // If we are calling, use selectedChatData. If receiving, use callData.
+  const remoteName = callData?.name || (selectedChatData?.firstName ? `${selectedChatData.firstName} ${selectedChatData.lastName}` : selectedChatData?.email) || "Unknown";
+  const remoteImageRaw = callData?.avatar || selectedChatData?.image;
+  const remoteImage = remoteImageRaw ? getImageUrl(remoteImageRaw) : null;
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -41,26 +50,42 @@ const CallScreen = () => {
       <div className="relative w-full max-w-6xl h-[70vh] bg-[#181920] rounded-2xl overflow-hidden shadow-2xl border border-[#2a2a3c]">
         {!callAccepted ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="w-24 h-24 bg-[#8417ff]/20 rounded-full flex items-center justify-center animate-pulse mb-6">
-              <div className="w-20 h-20 bg-[#8417ff] rounded-full flex items-center justify-center text-3xl font-bold text-white">
-                {/* Fallback to 'C' for Calling if we don't know the remote user yet */}
-                {callData?.name?.charAt(0).toUpperCase() || '📞'}
-              </div>
+            <div className="w-32 h-32 bg-[#8417ff]/20 rounded-full flex items-center justify-center animate-pulse mb-6 overflow-hidden">
+              {remoteImage ? (
+                <img src={remoteImage} alt="profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-28 h-28 bg-[#8417ff] rounded-full flex items-center justify-center text-5xl font-bold text-white">
+                  {remoteName.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
-            <h2 className="text-2xl text-white font-semibold">Calling...</h2>
+            <h2 className="text-2xl text-white font-semibold">Calling {remoteName}...</h2>
           </div>
         ) : (
-          remoteStream ? (
+          <>
+            {/* We show the remote stream if it exists. But if the remote user has their camera off, the stream might be empty or missing video tracks. 
+                For now, if there is no remoteStream, we show the avatar. 
+                WebRTC actually sends black frames when video is disabled natively, but if we don't have remoteStream yet, we show this. */}
             <video
               ref={remoteVideoRef}
               autoPlay
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${!remoteStream ? 'hidden' : ''}`}
             />
-          ) : (
-             <div className="absolute inset-0 flex items-center justify-center text-neutral-400">
-               Connecting...
-             </div>
-          )
+            {!remoteStream && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400">
+                <div className="w-32 h-32 bg-[#8417ff]/20 rounded-full flex items-center justify-center mb-6 overflow-hidden">
+                  {remoteImage ? (
+                    <img src={remoteImage} alt="profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-28 h-28 bg-[#8417ff] rounded-full flex items-center justify-center text-5xl font-bold text-white">
+                      {remoteName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                Connecting video...
+              </div>
+            )}
+          </>
         )}
 
         {/* Local Video (PiP) */}

@@ -48,6 +48,7 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
   const [callData, setCallData] = useState<CallData | null>(null);
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
+  const [connectedUser, setConnectedUser] = useState<string | null>(null);
   
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -139,6 +140,7 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
 
     setIsCalling(true);
     setCallEnded(false);
+    setConnectedUser(idToCall);
 
     const peer = setupPeerConnection(stream, idToCall, true);
 
@@ -177,6 +179,7 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
   const answerCall = async () => {
     if (!callData) return;
     setCallAccepted(true);
+    setConnectedUser(callData.from);
 
     const stream = await initLocalStream(callData.type);
     if (!stream) return;
@@ -236,11 +239,11 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const leaveCall = () => {
-    // Determine who to notify
-    const to = isCalling && callData ? callData.from : (isCalling ? undefined : callData?.from);
-    // Actually wait, if I am the caller, I don't know the callee ID easily here unless I stored it.
-    // Let's just broadcast end-call to whoever we are connected to.
-    
+    if (connectedUser) {
+      socket?.emit("end-call", { to: connectedUser });
+    } else if (callData?.from) {
+      socket?.emit("end-call", { to: callData.from });
+    }
     endCallCleanup();
     window.location.reload(); // Simple way to reset state completely for WebRTC
   };
