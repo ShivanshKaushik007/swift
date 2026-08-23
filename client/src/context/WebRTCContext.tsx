@@ -28,6 +28,7 @@ interface WebRTCContextType {
   callData: CallData | null;
   isMuted: boolean;
   isVideoOff: boolean;
+  isRemoteVideoOff: boolean;
 }
 
 const WebRTCContext = createContext<WebRTCContextType | null>(null);
@@ -53,6 +54,7 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
   
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isRemoteVideoOff, setIsRemoteVideoOff] = useState(false);
 
   const connectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -81,10 +83,15 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
       endCallCleanup();
     });
 
+    socket.on("toggled-video", (state) => {
+      setIsRemoteVideoOff(state);
+    });
+
     return () => {
       socket.off("incoming-call");
       socket.off("call-rejected");
       socket.off("call-ended");
+      socket.off("toggled-video");
     };
   }, [socket]);
 
@@ -239,6 +246,8 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
     setCallData(null);
     setIsMuted(false);
     setIsVideoOff(false);
+    setIsRemoteVideoOff(false);
+    setConnectedUser(null);
   };
 
   const leaveCall = () => {
@@ -267,6 +276,12 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoOff(!videoTrack.enabled);
+        
+        // Determine the other user
+        const to = connectedUser || callData?.from;
+        if (to) {
+          socket?.emit("toggle-video", { to, isVideoOff: !videoTrack.enabled });
+        }
       }
     }
   };
@@ -288,6 +303,7 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
         callData,
         isMuted,
         isVideoOff,
+        isRemoteVideoOff,
       }}
     >
       {children}

@@ -253,6 +253,10 @@ const setupSocket = (server: HttpServer) => {
       io.to(`user:${data.to}`).emit("call-ended");
     });
 
+    socket.on("toggle-video", (data) => {
+      io.to(`user:${data.to}`).emit("toggled-video", data.isVideoOff);
+    });
+
     socket.on("disconnect", () => disconnect(socket));
   });
 };

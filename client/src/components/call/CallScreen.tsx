@@ -16,10 +16,11 @@ const CallScreen = () => {
     toggleVideo,
     isMuted,
     isVideoOff,
+    isRemoteVideoOff,
     callData
   } = useWebRTC();
 
-  const { selectedChatData } = useAppStore();
+  const { selectedChatData, userInfo } = useAppStore();
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -28,6 +29,10 @@ const CallScreen = () => {
   const remoteName = callData?.name || (selectedChatData?.firstName ? `${selectedChatData.firstName} ${selectedChatData.lastName}` : selectedChatData?.email) || "Unknown";
   const remoteImageRaw = callData?.avatar || selectedChatData?.image;
   const remoteImage = remoteImageRaw ? getImageUrl(remoteImageRaw) : null;
+
+  const localName = userInfo?.firstName ? `${userInfo.firstName} ${userInfo.lastName}` : (userInfo?.email || "You");
+  const localImageRaw = userInfo?.image;
+  const localImage = localImageRaw ? getImageUrl(localImageRaw) : null;
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -69,11 +74,11 @@ const CallScreen = () => {
             <video
               ref={remoteVideoRef}
               autoPlay
-              className={`w-full h-full object-cover ${!remoteStream ? 'hidden' : ''}`}
+              className={`w-full h-full object-cover ${(!remoteStream || isRemoteVideoOff) ? 'hidden' : ''}`}
             />
-            {!remoteStream && (
+            {(!remoteStream || isRemoteVideoOff) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400">
-                <div className="w-32 h-32 bg-[#8417ff]/20 rounded-full flex items-center justify-center mb-6 overflow-hidden">
+                <div className="w-32 h-32 bg-[#8417ff]/20 rounded-full flex items-center justify-center mb-6 overflow-hidden shadow-2xl">
                   {remoteImage ? (
                     <img src={remoteImage} alt="profile" className="w-full h-full object-cover" />
                   ) : (
@@ -82,21 +87,35 @@ const CallScreen = () => {
                     </div>
                   )}
                 </div>
-                Connecting video...
+                {isRemoteVideoOff ? "Video paused" : "Connecting video..."}
               </div>
             )}
           </>
         )}
 
         {/* Local Video (PiP) */}
-        {localStream && !isVideoOff && (
-          <div className="absolute bottom-6 right-6 w-48 h-64 bg-black rounded-xl overflow-hidden border-2 border-[#2a2a3c] shadow-xl z-10">
+        {localStream && (
+          <div className="absolute bottom-6 right-6 w-48 h-64 bg-black rounded-xl overflow-hidden border-2 border-[#2a2a3c] shadow-xl z-10 flex flex-col items-center justify-center">
             <video
               ref={localVideoRef}
               autoPlay
               muted
-              className="w-full h-full object-cover scale-x-[-1]"
+              className={`w-full h-full object-cover scale-x-[-1] ${isVideoOff ? 'hidden' : ''}`}
             />
+            {isVideoOff && (
+              <div className="absolute inset-0 bg-[#181920] flex flex-col items-center justify-center">
+                <div className="w-20 h-20 bg-[#8417ff]/20 rounded-full flex items-center justify-center mb-3 overflow-hidden shadow-lg">
+                  {localImage ? (
+                    <img src={localImage} alt="profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-[#8417ff] flex items-center justify-center text-3xl font-bold text-white">
+                      {localName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full">You</span>
+              </div>
+            )}
           </div>
         )}
       </div>
