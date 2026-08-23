@@ -3,7 +3,7 @@ import { FiSearch, FiX } from "react-icons/fi";
 import { apiClient } from "@/lib/api-client";
 import { useAppStore } from "@/store";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { getColor } from "@/lib/utils";
+import { getColor, getImageUrl } from "@/lib/utils";
 import { HOST } from "@/utils/constants";
 import moment from "moment";
 
@@ -122,7 +122,7 @@ const GlobalSearch = () => {
                     >
                       <Avatar className="h-8 w-8">
                         {user.image ? (
-                          <AvatarImage src={`${HOST}/${user.image}`} alt="profile" className="object-cover" />
+                          <AvatarImage src={getImageUrl(user.image)} alt="profile" className="object-cover" />
                         ) : (
                           <AvatarFallback className={`uppercase text-xs ${getColor(user.color)}`}>
                             {user.firstName ? user.firstName[0] : user.email[0]}

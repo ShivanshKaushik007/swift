@@ -6,12 +6,10 @@ import { MessageBubble } from "../message-container/MessageBubble";
 import { useSocket } from "@/context/SocketContext";
 import moment from "moment";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { HOST } from "@/utils/constants";
+import { getImageUrl } from "@/lib/utils";
 
 const getFileUrl = (url) => {
-  if(!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return `${HOST}/${url}`;
+  return getImageUrl(url);
 };
 
 const ThreadSidebar = () => {

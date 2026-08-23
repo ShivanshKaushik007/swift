@@ -27,4 +27,17 @@ const attachmentStorage = new CloudinaryStorage({
 
 export const uploadAttachment = multer({ storage: attachmentStorage });
 
+const profileStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    return {
+      folder: "swift-chat/profiles",
+      allowed_formats: ["jpg", "png", "jpeg", "webp"],
+      public_id: `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9_.-]/g, "_")}`,
+    };
+  },
+});
+
+export const uploadProfileImage = multer({ storage: profileStorage });
+
 export default cloudinary;

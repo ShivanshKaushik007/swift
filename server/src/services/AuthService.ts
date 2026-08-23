@@ -1,7 +1,6 @@
 import UserRepository from "../repositories/UserRepository";
 import { compare } from "bcrypt";
 import jwt from "jsonwebtoken";
-import { renameSync, unlinkSync } from "fs";
 import { sendEmail } from "../utils/sendEmail";
 import crypto from "crypto";
 
@@ -160,9 +159,8 @@ export class AuthService {
   }
 
   async addProfileImage(userId: string, file: Express.Multer.File) {
-    const date = Date.now();
-    const fileName = "uploads/profiles/" + date + file.originalname;
-    renameSync(file.path, fileName);
+    // file.path is the Cloudinary secure URL
+    const fileName = file.path; 
     const updatedUser = await UserRepository.updateById(userId, { image: fileName });
     if (!updatedUser) throw new Error("User not found");
     return { image: updatedUser.image };
@@ -173,13 +171,8 @@ export class AuthService {
     if (!user) {
       throw new Error("User not found.");
     }
-    if (user.image) {
-      try {
-        unlinkSync(user.image);
-      } catch (e) {
-        console.error("Could not delete image file", e);
-      }
-    }
+    // If needed, add logic here to destroy the image on Cloudinary
+    // e.g. cloudinary.uploader.destroy(publicId)
     await UserRepository.updateById(userId, { image: "" });
   }
 }

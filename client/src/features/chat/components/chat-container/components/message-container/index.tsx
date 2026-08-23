@@ -6,12 +6,13 @@ import {
   HOST,
 } from "@/utils/constants";
 import moment from "moment";
+import { format } from "date-fns";
 import { useEffect, useRef, useState } from "react";
 import { MdFolderZip } from "react-icons/md";
 import { IoMdArrowRoundDown } from "react-icons/io";
 import { IoCloseSharp } from "react-icons/io5";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getColor } from "@/lib/utils";
+import { getColor, getImageUrl } from "@/lib/utils";
 import { MessageBubble } from "./MessageBubble";
 import { useSocket } from "@/context/SocketContext";
 import { AiOutlinePushpin } from "react-icons/ai";
@@ -154,9 +155,7 @@ const MessageContainer = () => {
 
   // File helper
   const getFileUrl = (url) => {
-    if(!url) return "";
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `${HOST}/${url}`;
+    return getImageUrl(url);
   };
 
   // Read receipts emitting

@@ -33,7 +33,11 @@ app.use(
 );
 
 // Security Headers
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 
 // Rate Limiting for all routes
 const limiter = rateLimit({

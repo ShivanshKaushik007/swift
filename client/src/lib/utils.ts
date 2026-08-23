@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import animationData from "@/assets/hello";
+import { HOST } from "@/utils/constants";
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -25,3 +26,9 @@ export const animationDefaultOptions = {
   autoplay:true,
   animationData,
 }
+
+export const getImageUrl = (url: string | undefined | null) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${HOST}/${url}`;
+};

@@ -6,7 +6,7 @@ import moment from "moment";
 import { MdFolderZip } from "react-icons/md";
 import { IoMdArrowRoundDown } from "react-icons/io";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getColor } from "@/lib/utils";
+import { getColor, getImageUrl } from "@/lib/utils";
 import { BsCheckAll, BsCheck } from "react-icons/bs";
 import { FiEdit2, FiTrash2, FiSmile, FiCornerUpLeft } from "react-icons/fi";
 import { FiMoreHorizontal, FiMessageSquare, FiStar } from "react-icons/fi";
@@ -29,9 +29,7 @@ const checkIfVideo = (filePath) => {
 };
 
 const getFileUrl = (url) => {
-  if(!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return `${HOST}/${url}`;
+  return getImageUrl(url);
 };
 
 export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {

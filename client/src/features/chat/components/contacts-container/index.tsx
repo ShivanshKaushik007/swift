@@ -7,7 +7,6 @@ import { useAppStore } from "@/store";
 import ContactList from "@/components/contact-list";
 import CreateChannel from "./components/create-channel";
 import GlobalSearch from "./components/global-search";
-import NotificationsList from "./components/notifications-list";
 
 const ContactsContainer = () => {
   const { setDirectMessagesContacts, directMessagesContacts, channels,setChannels } = useAppStore();
@@ -39,7 +38,6 @@ const ContactsContainer = () => {
         <Logo />
       </div>
       <GlobalSearch />
-      <NotificationsList />
       <div className="my-5">
         <div className="flex items-center justify-between pr-10">
           <Title text="Direct Messages" />

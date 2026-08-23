@@ -15,10 +15,9 @@ import {
 } from "../controllers/AuthController";
 import passport from "passport";
 import { verifyToken } from "../middleware/AuthMiddleware";
-import multer from "multer";
+import { uploadProfileImage } from "../config/cloudinary";
 
 const authRoutes = Router();
-const upload = multer({ dest: "uploads/profiles/" });
 authRoutes.post("/signup", signup);
 authRoutes.post("/login", login);
 authRoutes.post("/verify-email", verifyEmail);
@@ -30,7 +29,7 @@ authRoutes.post("/update-profile", verifyToken, updateProfile);
 authRoutes.post(
   "/add-profile-image",
   verifyToken,
-  upload.single("profile-image"),
+  uploadProfileImage.single("profile-image"),
   addProfileImage
 );
 authRoutes.delete("/remove-profile-image", verifyToken, removeProfileImage);

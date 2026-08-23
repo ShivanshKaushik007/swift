@@ -1,5 +1,6 @@
 import { useSocket } from "@/context/SocketContext";
 import { apiClient } from "@/lib/api-client";
+import { getImageUrl } from "@/lib/utils";
 import { useAppStore } from "@/store";
 import { UPLOAD_FILE_ROUTE } from "@/utils/constants";
 import EmojiPicker from "emoji-picker-react";
@@ -173,7 +174,7 @@ const MessageBar = () => {
               }}
             >
               <div className="h-6 w-6 rounded-full bg-[#8417ff] flex items-center justify-center text-xs uppercase overflow-hidden">
-                {member.image ? <img src={`${HOST}/${member.image}`} className="w-full h-full object-cover"/> : member.firstName?.charAt(0) || member.email?.charAt(0)}
+                {member.image ? <img src={getImageUrl(member.image)} className="w-full h-full object-cover"/> : member.firstName?.charAt(0) || member.email?.charAt(0)}
               </div>
               <span className="text-sm">{member.firstName} {member.lastName}</span>
             </div>

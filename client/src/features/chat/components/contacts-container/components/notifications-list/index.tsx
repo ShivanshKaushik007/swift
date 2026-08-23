@@ -3,8 +3,7 @@ import { FiBell } from "react-icons/fi";
 import { apiClient } from "@/lib/api-client";
 import { useAppStore } from "@/store";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { getColor } from "@/lib/utils";
-import { HOST } from "@/utils/constants";
+import { getColor, getImageUrl } from "@/lib/utils";
 import moment from "moment";
 
 const NotificationsList = () => {
@@ -113,7 +112,7 @@ const NotificationsList = () => {
                   <div className="flex items-center gap-3 mb-1">
                     <Avatar className="h-6 w-6">
                       {notif.sender.image ? (
-                        <AvatarImage src={`${HOST}/${notif.sender.image}`} />
+                        <AvatarImage src={getImageUrl(notif.sender.image)} />
                       ) : (
                         <AvatarFallback className={`text-[10px] ${getColor(notif.sender.color)}`}>
                           {notif.sender.firstName ? notif.sender.firstName[0] : notif.sender.email[0]}

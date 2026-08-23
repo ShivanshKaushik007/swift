@@ -1,7 +1,7 @@
 import { useAppStore } from "@/store";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { HOST } from "@/utils/constants";
-import { getColor } from "@/lib/utils";
+import { getColor, getImageUrl } from "@/lib/utils";
 import moment from "moment";
 import { IoCheckmarkDoneSharp, IoCheckmarkSharp } from "react-icons/io5";
 
@@ -44,7 +44,7 @@ const ContactList = ({ contacts, isChannel = false }) => {
               <Avatar className="h-10 w-10 rounded-full overflow-hidden">
                 {contact.image ? (
                   <AvatarImage
-                    src={`${HOST}/${contact.image}`}
+                    src={getImageUrl(contact.image)}
                     alt="profile"
                     className="object-cover w-full h-full bg-black"
                   />

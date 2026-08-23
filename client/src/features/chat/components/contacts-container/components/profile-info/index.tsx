@@ -1,11 +1,6 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { getColor } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getColor, getImageUrl } from "@/lib/utils";
 import { useAppStore } from "@/store";
 import { HOST, LOGOUT_ROUTE } from "@/utils/constants";
 import { FiEdit2 } from "react-icons/fi";
@@ -41,8 +36,8 @@ const ProfileInfo = () => {
           <Avatar className="h-12 w-12 rounded-full overflow-hidden">
             {userInfo.image ? (
               <AvatarImage
-                src={`${HOST}/${userInfo.image}`}
-                alt="profile"
+                src={getImageUrl(userInfo.image)}
+                alt="Profile"
                 className="object-cover w-full h-full bg-black"
               />
             ) : (
