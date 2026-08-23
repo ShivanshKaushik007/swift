@@ -1,5 +1,7 @@
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
+import { createAdapter } from "@socket.io/redis-adapter";
+import Redis from "ioredis";
 import Message from "./models/MessagesModel";
 import Channel from "./models/ChannelModel";
 
@@ -12,25 +14,23 @@ const setupSocket = (server: HttpServer) => {
       methods: ["GET", "POST"],
       credentials: true,
     },
+    pingInterval: 10000,
+    pingTimeout: 5000,
   });
   ioInstance = io;
 
-  const userSocketMap = new Map<string, string>();
+  if (process.env.REDIS_URL) {
+    const pubClient = new Redis(process.env.REDIS_URL);
+    const subClient = pubClient.duplicate();
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log("Redis Adapter connected.");
+  }
 
   const disconnect = (socket: Socket) => {
     console.log(`Client Disconnected: ${socket.id}`);
-    for (const [userId, socketId] of userSocketMap.entries()) {
-      if (socketId === socket.id) {
-        userSocketMap.delete(userId);
-        break;
-      }
-    }
   };
 
   const sendMessage = async (message: any) => {
-    const senderSocketId = userSocketMap.get(message.sender);
-    const recipientSocketId = userSocketMap.get(message.recipient);
-
     const createdMessage = await Message.create(message);
     const messageData = await Message.findById(createdMessage._id)
       .populate("sender", "id email firstName lastName image color")
@@ -41,11 +41,11 @@ const setupSocket = (server: HttpServer) => {
         populate: { path: "sender", select: "firstName lastName email color" }
       });
 
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit("receiveMessage", messageData);
+    if (message.recipient) {
+      io.to(`user:${message.recipient}`).emit("receiveMessage", messageData);
     }
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("receiveMessage", messageData);
+    if (message.sender) {
+      io.to(`user:${message.sender}`).emit("receiveMessage", messageData);
     }
   };
 
@@ -55,6 +55,7 @@ const setupSocket = (server: HttpServer) => {
     const createdMessage = await Message.create({
       sender,
       recipient: undefined,
+      channelId,
       content,
       messageType,
       timestamp: new Date(),
@@ -82,16 +83,10 @@ const setupSocket = (server: HttpServer) => {
       
       if (channel.members) {
         channel.members.forEach((member: any) => {
-          const memberSocketId = userSocketMap.get(member._id.toString());
-          if (memberSocketId) {
-            io.to(memberSocketId).emit("recieve-channel-message", finalData);
-          }
+          io.to(`user:${member._id.toString()}`).emit("recieve-channel-message", finalData);
         });
         
-        const adminSocketId = userSocketMap.get(channel.admin.toString());
-        if (adminSocketId) {
-          io.to(adminSocketId).emit("recieve-channel-message", finalData);
-        }       
+        io.to(`user:${channel.admin.toString()}`).emit("recieve-channel-message", finalData);
       }
     }
   };
@@ -99,32 +94,42 @@ const setupSocket = (server: HttpServer) => {
   io.on("connection", (socket: Socket) => {
     const userId = socket.handshake.query.userId as string;
     if (userId) {
-      userSocketMap.set(userId, socket.id);
-      console.log(`User connected: ${userId} with socket ID: ${socket.id}`);
+      socket.join(`user:${userId}`);
+      console.log(`User connected: ${userId} with socket ID: ${socket.id} (joined room user:${userId})`);
     } else {
       console.log("User ID not provided during connection.");
     }
 
-    socket.on("sendMessage", sendMessage);
-    socket.on("send-channel-message", sendChannelMessage);
+    socket.on("sendMessage", async (message, callback) => {
+      try {
+        await sendMessage(message);
+        if (typeof callback === 'function') callback({ status: "ok" });
+      } catch (error: any) {
+        if (typeof callback === 'function') callback({ status: "error", error: error.message });
+      }
+    });
+
+    socket.on("send-channel-message", async (message, callback) => {
+      try {
+        await sendChannelMessage(message);
+        if (typeof callback === 'function') callback({ status: "ok" });
+      } catch (error: any) {
+        if (typeof callback === 'function') callback({ status: "error", error: error.message });
+      }
+    });
     socket.on("typing", ({ recipient, channelId }) => {
       if (recipient) {
-        const recipientSocketId = userSocketMap.get(recipient);
-        if (recipientSocketId) io.to(recipientSocketId).emit("typing", { sender: userId });
+        io.to(`user:${recipient}`).emit("typing", { sender: userId });
       } else if (channelId) {
-        // Find channel members and broadcast
         Channel.findById(channelId).populate("members").then(channel => {
           if (channel) {
             channel.members.forEach((member: any) => {
               if (member._id.toString() !== userId) {
-                const memberSocketId = userSocketMap.get(member._id.toString());
-                if (memberSocketId) io.to(memberSocketId).emit("typing", { sender: userId, channelId });
+                io.to(`user:${member._id.toString()}`).emit("typing", { sender: userId, channelId });
               }
             });
-            // Also admin
             if (channel.admin.toString() !== userId) {
-              const adminSocketId = userSocketMap.get(channel.admin.toString());
-              if (adminSocketId) io.to(adminSocketId).emit("typing", { sender: userId, channelId });
+              io.to(`user:${channel.admin.toString()}`).emit("typing", { sender: userId, channelId });
             }
           }
         });
@@ -133,20 +138,17 @@ const setupSocket = (server: HttpServer) => {
 
     socket.on("stopTyping", ({ recipient, channelId }) => {
       if (recipient) {
-        const recipientSocketId = userSocketMap.get(recipient);
-        if (recipientSocketId) io.to(recipientSocketId).emit("stopTyping", { sender: userId });
+        io.to(`user:${recipient}`).emit("stopTyping", { sender: userId });
       } else if (channelId) {
         Channel.findById(channelId).populate("members").then(channel => {
           if (channel) {
             channel.members.forEach((member: any) => {
               if (member._id.toString() !== userId) {
-                const memberSocketId = userSocketMap.get(member._id.toString());
-                if (memberSocketId) io.to(memberSocketId).emit("stopTyping", { sender: userId, channelId });
+                io.to(`user:${member._id.toString()}`).emit("stopTyping", { sender: userId, channelId });
               }
             });
             if (channel.admin.toString() !== userId) {
-              const adminSocketId = userSocketMap.get(channel.admin.toString());
-              if (adminSocketId) io.to(adminSocketId).emit("stopTyping", { sender: userId, channelId });
+              io.to(`user:${channel.admin.toString()}`).emit("stopTyping", { sender: userId, channelId });
             }
           }
         });
@@ -155,10 +157,7 @@ const setupSocket = (server: HttpServer) => {
 
     socket.on("messageRead", ({ messageId, recipient, channelId }) => {
       if (recipient) {
-        const recipientSocketId = userSocketMap.get(recipient);
-        if (recipientSocketId) {
-          io.to(recipientSocketId).emit("messageRead", { messageId, reader: userId });
-        }
+        io.to(`user:${recipient}`).emit("messageRead", { messageId, reader: userId });
       } else if (channelId) {
          io.to(channelId).emit("messageRead", { messageId, reader: userId, channelId });
       }
@@ -166,8 +165,7 @@ const setupSocket = (server: HttpServer) => {
 
     socket.on("messageEdited", (messageData) => {
       if (messageData.recipient) {
-        const recipientSocketId = userSocketMap.get(messageData.recipient);
-        if (recipientSocketId) io.to(recipientSocketId).emit("messageEdited", messageData);
+        io.to(`user:${messageData.recipient}`).emit("messageEdited", messageData);
       } else if (messageData.channelId) {
         io.to(messageData.channelId).emit("messageEdited", messageData);
       }
@@ -175,8 +173,7 @@ const setupSocket = (server: HttpServer) => {
 
     socket.on("messageDeleted", (messageData) => {
       if (messageData.recipient) {
-        const recipientSocketId = userSocketMap.get(messageData.recipient);
-        if (recipientSocketId) io.to(recipientSocketId).emit("messageDeleted", messageData);
+        io.to(`user:${messageData.recipient}`).emit("messageDeleted", messageData);
       } else if (messageData.channelId) {
         io.to(messageData.channelId).emit("messageDeleted", messageData);
       }
@@ -184,8 +181,7 @@ const setupSocket = (server: HttpServer) => {
 
     socket.on("messageReaction", (reactionData) => {
       if (reactionData.recipient) {
-        const recipientSocketId = userSocketMap.get(reactionData.recipient);
-        if (recipientSocketId) io.to(recipientSocketId).emit("messageReaction", reactionData);
+        io.to(`user:${reactionData.recipient}`).emit("messageReaction", reactionData);
       } else if (reactionData.channelId) {
         io.to(reactionData.channelId).emit("messageReaction", reactionData);
       }

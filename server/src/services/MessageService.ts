@@ -4,8 +4,9 @@ import Message from "../models/MessagesModel";
 import { mkdirSync, renameSync } from "fs";
 
 export class MessageService {
-  async getMessages(user1: string, user2: string) {
-    return await MessageRepository.getMessagesBetweenUsers(user1, user2);
+  async getMessages(user1: string, user2: string, limit: number = 50, cursor?: string) {
+    const parsedCursor = cursor ? new Date(cursor) : undefined;
+    return await MessageRepository.getMessagesBetweenUsers(user1, user2, limit, parsedCursor);
   }
 
   async getThreadMessages(threadId: string) {

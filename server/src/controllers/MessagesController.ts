@@ -10,8 +10,9 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
     if (!user2) {
       return res.status(400).send("Both user ID's are required. ");
     }
+    const cursor = req.query.cursor as string;
 
-    const messages = await messageService.getMessages(user1, user2);
+    const messages = await messageService.getMessages(user1, user2, 50, cursor);
     return res.status(200).json({ messages });
   } catch (error) {
     next(error);

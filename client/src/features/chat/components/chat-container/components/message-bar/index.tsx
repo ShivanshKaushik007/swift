@@ -57,26 +57,32 @@ const MessageBar = () => {
     setMessage((msg) => msg + emoji.emoji);
   };
   const handleSendMessage = async () => {
+    const payload = {
+      sender: userInfo.id,
+      content: message,
+      messageType: "text",
+      fileUrl: undefined,
+      replyTo: replyMessage ? replyMessage._id : undefined,
+    };
+
+    const ackCallback = (ack) => {
+      if (ack?.status === "error") {
+        console.error("Message failed to send:", ack.error);
+        // TODO: show a toast or retry UI
+      }
+    };
+
     if (selectedChatType === "contact") {
       socket.emit("sendMessage", {
-        sender: userInfo.id,
-        content: message,
+        ...payload,
         recipient: selectedChatData._id,
-        messageType: "text",
-        fileUrl: undefined,
-        replyTo: replyMessage ? replyMessage._id : undefined,
-      });
-
+      }, ackCallback);
     } else if (selectedChatType === "channel") {
       socket.emit("send-channel-message", {
-        sender: userInfo.id,
-        content: message,
-        messageType: "text",
-        fileUrl: undefined,
+        ...payload,
         channelId: selectedChatData._id,
-        replyTo: replyMessage ? replyMessage._id : undefined,
         mentions: selectedMentions,
-      });
+      }, ackCallback);
     }
     setMessage("");
     localStorage.removeItem(draftKey);

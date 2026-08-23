@@ -16,6 +16,10 @@ export const SocketProvider = ({ children }) => {
       socket.current = io(HOST, {
         withCredentials: true,
         query: { userId: userInfo.id },
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
       });
       socket.current.on("connect", () => {
         console.log("Connected to socket server");

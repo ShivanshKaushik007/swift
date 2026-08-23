@@ -2,13 +2,20 @@ import Message, { IMessage } from "../models/MessagesModel";
 import mongoose from "mongoose";
 
 class MessageRepository {
-  async getMessagesBetweenUsers(user1: string, user2: string): Promise<IMessage[]> {
-    return await Message.find({
+  async getMessagesBetweenUsers(user1: string, user2: string, limit: number = 50, cursor?: Date): Promise<IMessage[]> {
+    const query: any = {
       $or: [
         { sender: user1, recipient: user2 },
         { sender: user2, recipient: user1 },
       ],
-    }).sort({ timestamp: 1 })
+    };
+    if (cursor) {
+      query.timestamp = { $lt: cursor };
+    }
+
+    const messages = await Message.find(query)
+      .sort({ timestamp: -1 })
+      .limit(limit)
       .populate("sender", "id email firstName lastName image color")
       .populate("recipient", "id email firstName lastName image color")
       .populate({
@@ -16,6 +23,28 @@ class MessageRepository {
         select: "content sender messageType fileUrl",
         populate: { path: "sender", select: "firstName lastName email color" }
       });
+      
+    return messages.reverse();
+  }
+
+  async getChannelMessages(channelId: string, limit: number = 50, cursor?: Date): Promise<IMessage[]> {
+    const query: any = { channelId };
+    
+    if (cursor) {
+      query.timestamp = { $lt: cursor };
+    }
+
+    const messages = await Message.find(query)
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .populate("sender", "id email firstName lastName image color")
+      .populate({
+        path: "replyTo",
+        select: "content sender messageType fileUrl",
+        populate: { path: "sender", select: "firstName lastName email color" }
+      });
+      
+    return messages.reverse();
   }
 
   async getContactsForDMList(userId: string): Promise<any[]> {

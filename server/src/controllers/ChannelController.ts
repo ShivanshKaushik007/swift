@@ -36,9 +36,10 @@ export const getUserChannels = async (req: Request, res: Response, next: NextFun
 export const getChannelMessages = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { channelId } = req.params;
+    const cursor = req.query.cursor as string;
     if (!channelId) return res.status(400).send("Channel ID is required");
 
-    const messages = await channelService.getChannelMessages(channelId as string);
+    const messages = await channelService.getChannelMessages(channelId as string, 50, cursor);
     return res.status(200).json({ messages }); // Changed 201 to 200 for GET request
   } catch (error: any) {
     if (error.message.includes("not found")) {

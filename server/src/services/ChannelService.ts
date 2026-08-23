@@ -1,6 +1,7 @@
 import ChannelRepository from "../repositories/ChannelRepository";
 import UserRepository from "../repositories/UserRepository";
 import mongoose from "mongoose";
+import { getCache, setCache } from "../utils/redis";
 
 export class ChannelService {
   async createChannel(userId: string, name: string, members: string[]) {
@@ -18,19 +19,40 @@ export class ChannelService {
       admin: new mongoose.Types.ObjectId(userId),
     });
     
+    // Invalidate cache for all members and admin
+    for (const member of members) {
+      const cacheKey = `user_channels:${member}`;
+      await getCache(cacheKey).then(async (cached) => {
+        if(cached) {
+          const { deleteCache } = await import("../utils/redis");
+          await deleteCache(cacheKey);
+        }
+      });
+    }
+    
     return newChannel;
   }
 
   async getUserChannels(userId: string) {
-    return await ChannelRepository.findUserChannels(userId);
+    const cacheKey = `user_channels:${userId}`;
+    const cached = await getCache(cacheKey);
+    if (cached) return cached;
+    
+    const channels = await ChannelRepository.findUserChannels(userId);
+    await setCache(cacheKey, channels, 300); // cache for 5 minutes
+    return channels;
   }
 
-  async getChannelMessages(channelId: string) {
-    const channel = await ChannelRepository.findByIdWithMessages(channelId);
+  async getChannelMessages(channelId: string, limit: number = 50, cursor?: string) {
+    const channel = await ChannelRepository.findById(channelId);
     if (!channel) {
       throw new Error("Channel not found.");
     }
-    return channel.messages;
+    
+    // We now fetch messages directly from MessageRepository
+    const MessageRepository = (await import("../repositories/MessageRepository")).default;
+    const parsedCursor = cursor ? new Date(cursor) : undefined;
+    return await MessageRepository.getChannelMessages(channelId, limit, parsedCursor);
   }
 }
 

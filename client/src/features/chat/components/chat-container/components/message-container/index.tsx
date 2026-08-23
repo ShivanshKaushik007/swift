@@ -24,6 +24,7 @@ const MessageContainer = () => {
     userInfo,
     selectedChatMessages,
     setSelectedChatMessages,
+    prependMessages,
     setFileDownloadProgress,
     setIsDownloading,
     updateMessage,
@@ -31,6 +32,9 @@ const MessageContainer = () => {
   const [showImage, setShowImage] = useState(false);
   const [imageURL, setImageURL] = useState(null);
   const [pinnedIndex, setPinnedIndex] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const containerRef = useRef(null);
 
   const pinnedMessages = selectedChatMessages.filter(m => m.isPinned);
   
@@ -65,6 +69,7 @@ const MessageContainer = () => {
         );
         if (response.data.messages) {
           setSelectedChatMessages(response.data.messages);
+          setHasMore(response.data.messages.length === 50);
         }
       } catch (error) {
         console.log({ error });
@@ -78,6 +83,7 @@ const MessageContainer = () => {
         );
         if (response.data.messages) {
           setSelectedChatMessages(response.data.messages);
+          setHasMore(response.data.messages.length === 50);
         }
       } catch (error) {
         console.log({ error });
@@ -88,6 +94,58 @@ const MessageContainer = () => {
       else if (selectedChatType === "channel") getChannelMessages();
     }
   }, [selectedChatData, selectedChatType, setSelectedChatMessages]);
+
+  const loadMoreMessages = async () => {
+    if (isLoadingMore || !hasMore || selectedChatMessages.length === 0) return;
+    setIsLoadingMore(true);
+    
+    const cursor = selectedChatMessages[0].timestamp;
+    
+    // Save current scroll height to restore position after prepend
+    const prevScrollHeight = containerRef.current?.scrollHeight;
+    
+    try {
+      let newMessages = [];
+      if (selectedChatType === "contact") {
+        const response = await apiClient.post(
+          `${GET_ALL_MESSAGES_ROUTE}?cursor=${cursor}`,
+          { id: selectedChatData._id },
+          { withCredentials: true }
+        );
+        newMessages = response.data.messages || [];
+      } else if (selectedChatType === "channel") {
+        const response = await apiClient.get(
+          `${GET_CHANNEL_MESSAGES}/${selectedChatData._id}?cursor=${cursor}`,
+          { withCredentials: true }
+        );
+        newMessages = response.data.messages || [];
+      }
+      
+      if (newMessages.length > 0) {
+        prependMessages(newMessages);
+        setHasMore(newMessages.length === 50);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoadingMore(false);
+      // Restore scroll position so it doesn't jump to top
+      setTimeout(() => {
+        if (containerRef.current && prevScrollHeight) {
+          containerRef.current.scrollTop = containerRef.current.scrollHeight - prevScrollHeight;
+        }
+      }, 0);
+    }
+  };
+
+  const handleScroll = (e) => {
+    if (e.target.scrollTop === 0) {
+      loadMoreMessages();
+    }
+  };
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behaviour: "smooth" });
@@ -168,7 +226,16 @@ const MessageContainer = () => {
   };
 
   return (
-    <div className="relative flex-1 overflow-y-auto scrollbar-hidden p-4 px-8 w-full">
+    <div 
+      className="relative flex-1 overflow-y-auto scrollbar-hidden p-4 px-8 w-full"
+      ref={containerRef}
+      onScroll={handleScroll}
+    >
+      {isLoadingMore && (
+        <div className="flex justify-center p-2">
+          <span className="text-white/50 text-xs">Loading older messages...</span>
+        </div>
+      )}
       {displayMessage && (
         <div 
           onClick={() => {
