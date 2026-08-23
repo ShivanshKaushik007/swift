@@ -2,6 +2,7 @@
 import React from "react";
 import { useWebRTC } from "@/context/WebRTCContext";
 import { FiPhone, FiPhoneOff, FiVideo, FiMic, FiMicOff, FiVideoOff } from "react-icons/fi";
+import { getImageUrl } from "@/lib/utils";
 
 const IncomingCallModal = () => {
   const { callData, answerCall, rejectCall, callAccepted } = useWebRTC();
@@ -14,10 +15,14 @@ const IncomingCallModal = () => {
         <div className="relative">
           {/* Outer ripples */}
           <div className="absolute inset-0 bg-[#8417ff]/20 rounded-full animate-ping scale-150" />
-          <div className="w-28 h-28 bg-[#8417ff]/30 rounded-full flex items-center justify-center animate-pulse relative z-10">
-            <div className="w-24 h-24 bg-gradient-to-br from-[#8417ff] to-[#5a0fb3] rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-lg">
-              {callData.name?.charAt(0).toUpperCase()}
-            </div>
+          <div className="w-28 h-28 bg-[#8417ff]/30 rounded-full flex items-center justify-center animate-pulse relative z-10 overflow-hidden">
+            {callData.avatar ? (
+              <img src={getImageUrl(callData.avatar)} alt="profile" className="w-full h-full object-cover rounded-full shadow-lg" />
+            ) : (
+              <div className="w-24 h-24 bg-gradient-to-br from-[#8417ff] to-[#5a0fb3] rounded-full flex items-center justify-center text-4xl font-bold text-white shadow-lg">
+                {callData.name?.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
         </div>
         

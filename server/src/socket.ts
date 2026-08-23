@@ -225,11 +225,12 @@ const setupSocket = (server: HttpServer) => {
 
     // WebRTC Signaling Events
     socket.on("call-user", (data) => {
-      // data: { userToCall, signalData, from, callerName, type }
+      // data: { userToCall, signalData, from, callerName, avatar, type }
       io.to(`user:${data.userToCall}`).emit("incoming-call", {
         signal: data.signalData,
         from: data.from,
         callerName: data.callerName,
+        avatar: data.avatar,
         type: data.type
       });
     });

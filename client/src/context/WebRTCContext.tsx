@@ -8,6 +8,7 @@ interface CallData {
   isReceivingCall: boolean;
   from: string;
   name: string;
+  avatar?: string;
   signal: any;
   type: "audio" | "video";
 }
@@ -64,6 +65,7 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
         isReceivingCall: true,
         from: data.from,
         name: data.callerName,
+        avatar: data.avatar,
         signal: data.signal,
         type: data.type,
       });
@@ -153,6 +155,7 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
           signalData: peer.localDescription,
           from: userInfo?.id,
           callerName: `${userInfo?.firstName} ${userInfo?.lastName}`,
+          avatar: userInfo?.image,
           type,
         });
       } catch (err) {
