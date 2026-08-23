@@ -223,6 +223,35 @@ const setupSocket = (server: HttpServer) => {
       }
     });
 
+    // WebRTC Signaling Events
+    socket.on("call-user", (data) => {
+      // data: { userToCall, signalData, from, callerName, type }
+      io.to(`user:${data.userToCall}`).emit("incoming-call", {
+        signal: data.signalData,
+        from: data.from,
+        callerName: data.callerName,
+        type: data.type
+      });
+    });
+
+    socket.on("answer-call", (data) => {
+      // data: { to, signal }
+      io.to(`user:${data.to}`).emit("call-accepted", data.signal);
+    });
+
+    socket.on("webrtc-ice-candidate", (data) => {
+      // data: { to, candidate }
+      io.to(`user:${data.to}`).emit("webrtc-ice-candidate", data.candidate);
+    });
+
+    socket.on("reject-call", (data) => {
+      io.to(`user:${data.to}`).emit("call-rejected");
+    });
+
+    socket.on("end-call", (data) => {
+      io.to(`user:${data.to}`).emit("call-ended");
+    });
+
     socket.on("disconnect", () => disconnect(socket));
   });
 };

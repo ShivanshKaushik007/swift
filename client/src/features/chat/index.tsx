@@ -6,6 +6,9 @@ import ContactsContainer from "./components/contacts-container";
 import WorkspaceSidebar from "./components/workspace-sidebar";
 import EmptyChatContainer from "./components/empty-chat-container";
 import ChatContainer from "./components/chat-container";
+import { WebRTCProvider } from "@/context/WebRTCContext";
+import IncomingCallModal from "@/components/call/IncomingCallModal";
+import CallScreen from "@/components/call/CallScreen";
 
 const Chat = () => {
   const {
@@ -37,13 +40,17 @@ const Chat = () => {
           {fileDownloadProgress}%
         </div>
       )}
-      <WorkspaceSidebar />
-      <ContactsContainer />
-      {selectedChatType === undefined ? (
-        <EmptyChatContainer />
-      ) : (
-        <ChatContainer />
-      )}
+      <WebRTCProvider>
+        <WorkspaceSidebar />
+        <ContactsContainer />
+        {selectedChatType === undefined ? (
+          <EmptyChatContainer />
+        ) : (
+          <ChatContainer />
+        )}
+        <IncomingCallModal />
+        <CallScreen />
+      </WebRTCProvider>
     </div>
   );
 };
