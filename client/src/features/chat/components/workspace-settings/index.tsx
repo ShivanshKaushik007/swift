@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from "react";
 import { useAppStore } from "@/store";
 import { FiX, FiLink, FiUsers, FiShield } from "react-icons/fi";

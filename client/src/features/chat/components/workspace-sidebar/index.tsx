@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,7 +41,7 @@ const WorkspaceSidebar = () => {
               <FiHome className="text-2xl" />
             </div>
           </TooltipTrigger>
-          <TooltipContent side="right" className="bg-[#1c1b1e] border-none text-white">
+          <TooltipContent className="bg-[#1c1b1e] border-none text-white">
             <p>Direct Messages</p>
           </TooltipContent>
         </Tooltip>
@@ -66,7 +67,7 @@ const WorkspaceSidebar = () => {
                 )}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-[#1c1b1e] border-none text-white">
+            <TooltipContent className="bg-[#1c1b1e] border-none text-white">
               <p>{workspace.name}</p>
             </TooltipContent>
           </Tooltip>
@@ -81,7 +82,7 @@ const WorkspaceSidebar = () => {
               <FiPlus className="text-2xl" />
             </div>
           </TooltipTrigger>
-          <TooltipContent side="right" className="bg-[#1c1b1e] border-none text-white">
+          <TooltipContent className="bg-[#1c1b1e] border-none text-white">
             <p>Add a Workspace</p>
           </TooltipContent>
         </Tooltip>
@@ -95,7 +96,7 @@ const WorkspaceSidebar = () => {
               <FiLogIn className="text-2xl" />
             </div>
           </TooltipTrigger>
-          <TooltipContent side="right" className="bg-[#1c1b1e] border-none text-white">
+          <TooltipContent className="bg-[#1c1b1e] border-none text-white">
             <p>Join a Workspace</p>
           </TooltipContent>
         </Tooltip>

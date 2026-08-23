@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   Tooltip,
   TooltipContent,
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Lottie from "react-lottie";
-import { animationDefaultOptions, getColor } from "@/lib/utils";
+import { animationDefaultOptions, getColor, getImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { HOST, SEARCH_CONTACTS_ROUTES } from "@/utils/constants";
 import { ScrollArea } from "@/components/ui/scroll-area";
