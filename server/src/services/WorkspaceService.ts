@@ -119,6 +119,89 @@ class WorkspaceService {
 
     return workspace;
   }
+  async getAuditLogs(workspaceId: string, userId: string) {
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) throw new Error("Workspace not found");
+
+    const member = workspace.members.find(m => m.user.toString() === userId);
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      throw new Error("Unauthorized");
+    }
+
+    const logs = await AuditLog.find({ workspaceId })
+      .populate('actor', 'firstName lastName email image color')
+      .sort({ createdAt: -1 })
+      .limit(50);
+    return logs;
+  }
+
+  async updateMemberRole(workspaceId: string, adminId: string, targetUserId: string, newRole: string) {
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) throw new Error("Workspace not found");
+
+    const admin = workspace.members.find(m => m.user.toString() === adminId);
+    if (!admin || !['owner', 'admin'].includes(admin.role)) {
+      throw new Error("Unauthorized");
+    }
+
+    const targetIndex = workspace.members.findIndex(m => m.user.toString() === targetUserId);
+    if (targetIndex === -1) throw new Error("Member not found");
+
+    const oldRole = workspace.members[targetIndex].role;
+    if (oldRole === 'owner') throw new Error("Cannot change owner's role");
+    
+    // Only owner can promote/demote admins, admins can change lower roles
+    if (admin.role !== 'owner' && (oldRole === 'admin' || newRole === 'admin')) {
+        throw new Error("Only owner can manage admin roles");
+    }
+
+    workspace.members[targetIndex].role = newRole as any;
+    await workspace.save();
+
+    await AuditLog.create({
+      workspaceId,
+      actor: adminId,
+      action: 'MEMBER_ROLE_UPDATED',
+      target: targetUserId as any,
+      details: { oldRole, newRole }
+    });
+
+    return workspace;
+  }
+
+  async kickMember(workspaceId: string, adminId: string, targetUserId: string) {
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) throw new Error("Workspace not found");
+
+    const admin = workspace.members.find(m => m.user.toString() === adminId);
+    if (!admin || !['owner', 'admin'].includes(admin.role)) {
+      throw new Error("Unauthorized");
+    }
+
+    const targetMember = workspace.members.find(m => m.user.toString() === targetUserId);
+    if (!targetMember) throw new Error("Member not found");
+
+    if (targetMember.role === 'owner') throw new Error("Cannot kick owner");
+    if (admin.role !== 'owner' && targetMember.role === 'admin') {
+      throw new Error("Only owner can kick admins");
+    }
+
+    workspace.members = workspace.members.filter(m => m.user.toString() !== targetUserId);
+    await workspace.save();
+
+    await User.findByIdAndUpdate(targetUserId, {
+      $pull: { workspaces: workspace._id }
+    });
+
+    await AuditLog.create({
+      workspaceId,
+      actor: adminId,
+      action: 'MEMBER_KICKED',
+      target: targetUserId as any
+    });
+
+    return workspace;
+  }
 }
 
 export const workspaceService = new WorkspaceService();

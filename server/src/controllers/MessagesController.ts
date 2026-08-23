@@ -22,7 +22,7 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
 export const getThreadMessages = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const messages = await messageService.getThreadMessages(id);
+    const messages = await messageService.getThreadMessages(id as string);
     return res.status(200).json({ messages });
   } catch (error) {
     next(error);
@@ -46,7 +46,7 @@ export const editMessage = async (req: Request, res: Response, next: NextFunctio
   try {
     const { id } = req.params;
     const { content } = req.body;
-    const message = await messageService.editMessage(id, req.userId!, content);
+    const message = await messageService.editMessage(id as string, req.userId!, content);
     return res.status(200).json({ message });
   } catch (error) {
     next(error);
@@ -56,7 +56,7 @@ export const editMessage = async (req: Request, res: Response, next: NextFunctio
 export const deleteMessage = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const message = await messageService.deleteMessage(id, req.userId!);
+    const message = await messageService.deleteMessage(id as string, req.userId!);
     return res.status(200).json({ message });
   } catch (error) {
     next(error);
@@ -67,7 +67,7 @@ export const reactToMessage = async (req: Request, res: Response, next: NextFunc
   try {
     const { id } = req.params;
     const { emoji } = req.body;
-    const message = await messageService.reactToMessage(id, req.userId!, emoji);
+    const message = await messageService.reactToMessage(id as string, req.userId!, emoji);
     return res.status(200).json({ message });
   } catch (error) {
     next(error);
@@ -78,7 +78,7 @@ export const pinMessage = async (req: Request, res: Response, next: NextFunction
   try {
     const { id } = req.params;
     const { isPinned } = req.body;
-    const message = await messageService.pinMessage(id, isPinned);
+    const message = await messageService.pinMessage(id as string, isPinned);
     return res.status(200).json({ message });
   } catch (error) {
     next(error);
@@ -88,7 +88,7 @@ export const pinMessage = async (req: Request, res: Response, next: NextFunction
 export const starMessage = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const starredMessages = await messageService.toggleStarMessage(id, req.userId!);
+    const starredMessages = await messageService.toggleStarMessage(id as string, req.userId!);
     return res.status(200).json({ starredMessages });
   } catch (error) {
     next(error);
