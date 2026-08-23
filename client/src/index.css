@@ -73,3 +73,22 @@
   font-weight: 500;
   font-style: normal;
 }
+
+/* Custom Scrollbar to match website theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2f303b;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8417ff;
+}
