@@ -4,7 +4,7 @@ export interface IMessage extends Document {
   sender: mongoose.Types.ObjectId;
   recipient?: mongoose.Types.ObjectId;
   channelId?: mongoose.Types.ObjectId;
-  messageType: "text" | "file";
+  messageType: "text" | "file" | "call";
   content?: string;
   attachments?: { type: string; url: string; name: string; size: number }[];
   timestamp: Date;
@@ -39,7 +39,7 @@ const messageSchema = new mongoose.Schema<IMessage>({
   },
   messageType: {
     type: String,
-    enum: ["text", "file"],
+    enum: ["text", "file", "call"],
     required: true,
   },
   content: {

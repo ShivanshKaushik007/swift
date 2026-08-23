@@ -165,6 +165,17 @@ export const WebRTCProvider = ({ children }: { children: React.ReactNode }) => {
           avatar: userInfo?.image,
           type,
         });
+
+        // Also emit a chat message for the call log
+        const selectedChatType = useAppStore.getState().selectedChatType;
+        if (selectedChatType === "contact") {
+          socket?.emit("sendMessage", {
+            sender: userInfo?.id,
+            recipient: idToCall,
+            messageType: "call",
+            content: type === "video" ? "Started a video call" : "Started a voice call",
+          });
+        }
       } catch (err) {
         console.error(err);
       }

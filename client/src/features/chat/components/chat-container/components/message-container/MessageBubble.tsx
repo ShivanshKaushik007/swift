@@ -8,7 +8,7 @@ import { IoMdArrowRoundDown } from "react-icons/io";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getColor, getImageUrl } from "@/lib/utils";
 import { BsCheckAll, BsCheck } from "react-icons/bs";
-import { FiEdit2, FiTrash2, FiSmile, FiCornerUpLeft } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiSmile, FiCornerUpLeft, FiPhone, FiVideo } from "react-icons/fi";
 import { FiMoreHorizontal, FiMessageSquare, FiStar } from "react-icons/fi";
 import { AiOutlinePushpin } from "react-icons/ai";
 import { apiClient } from "@/lib/api-client";
@@ -198,6 +198,17 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
                     </span>
                   </div>
                 )
+              )}
+              {message.messageType === "call" && (
+                <div className="flex items-center gap-3 bg-black/10 p-2 rounded-lg cursor-pointer hover:bg-black/20 transition-colors">
+                  <div className="bg-[#8417ff]/20 p-3 rounded-full text-[#8417ff]">
+                    {message.content.includes("video") ? <FiVideo size={20} /> : <FiPhone size={20} />}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{message.content}</span>
+                    <span className="text-xs text-white/60">Tap to call back</span>
+                  </div>
+                </div>
               )}
             </div>
           )}
