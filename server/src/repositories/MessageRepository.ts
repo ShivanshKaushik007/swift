@@ -74,7 +74,7 @@ class MessageRepository {
                 {
                   $and: [
                     { $eq: ["$recipient", objectId] },
-                    { $not: { $in: [objectId, "$readBy.user"] } }
+                    { $not: { $in: [objectId, { $ifNull: ["$readBy.user", []] }] } }
                   ]
                 },
                 1,

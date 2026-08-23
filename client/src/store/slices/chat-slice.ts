@@ -24,7 +24,26 @@ export const createChatSlice = (set, get) => ({
   setFileDownloadProgress: (fileDownloadProgress) =>
     set({ fileDownloadProgress }),
   setSelectedChatType: (selectedChatType) => set({ selectedChatType }),
-  setSelectedChatData: (selectedChatData) => set({ selectedChatData }),
+  setSelectedChatData: (selectedChatData) => {
+    // Clear unread count for this contact/channel when opened
+    const type = get().selectedChatType;
+    if (type === "contact") {
+      const dmContacts = [...get().directMessagesContacts];
+      const index = dmContacts.findIndex((c: any) => c._id === selectedChatData._id);
+      if (index !== -1) {
+        dmContacts[index] = { ...dmContacts[index], unreadCount: 0 };
+        set({ directMessagesContacts: dmContacts });
+      }
+    } else if (type === "channel") {
+      const channels = [...get().channels];
+      const index = channels.findIndex((c: any) => c._id === selectedChatData._id);
+      if (index !== -1) {
+        channels[index] = { ...channels[index], unreadCount: 0 };
+        set({ channels });
+      }
+    }
+    set({ selectedChatData });
+  },
   setSelectedChatMessages: (selectedChatMessages) =>
     set({ selectedChatMessages }),
   prependMessages: (messages) => {
@@ -98,16 +117,20 @@ export const createChatSlice = (set, get) => ({
     }
   },
   addChannelInChannelList: (message) => {
-    const channels = get().channels;
-    const data = channels.find((channel) => channel._id === message.channelId);
+    const channels = [...get().channels];
     const index = channels.findIndex(
       (channel) => channel._id === message.channelId
     );
 
-    if (index !== -1 && index !== undefined) {
+    const isUnread = get().selectedChatData?._id !== message.channelId && message.sender._id !== get().userInfo.id;
+
+    if (index !== -1) {
+      const data = channels[index];
+      if (isUnread) data.unreadCount = (data.unreadCount || 0) + 1;
       channels.splice(index, 1);
       channels.unshift(data);
     }
+    set({ channels });
   },
   addContactsInDMContacts: (message) => {
     const userId = get().userInfo.id;
@@ -117,14 +140,18 @@ export const createChatSlice = (set, get) => ({
         : message.sender._id;
     const fromData =
       message.sender._id === userId ? message.recipient : message.sender;
-    const dmContacts = get().directMessagesContacts;
-    const data = dmContacts.find((contact) => contact._id === fromId);
+    const dmContacts = [...get().directMessagesContacts];
     const index = dmContacts.findIndex((contact) => contact._id === fromId);
 
-    if (index !== -1 && index !== undefined) {
+    const isUnread = get().selectedChatData?._id !== fromId && message.sender._id !== userId;
+
+    if (index !== -1) {
+      const data = dmContacts[index];
+      if (isUnread) data.unreadCount = (data.unreadCount || 0) + 1;
       dmContacts.splice(index, 1);
       dmContacts.unshift(data);
     } else {
+      if (isUnread) fromData.unreadCount = 1;
       dmContacts.unshift(fromData);
     }
     set({ directMessagesContacts: dmContacts });
