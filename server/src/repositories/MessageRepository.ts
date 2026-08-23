@@ -68,6 +68,20 @@ class MessageRepository {
             },
           },
           lastMessageTime: { $first: "$timestamp" },
+          unreadCount: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$recipient", objectId] },
+                    { $not: { $in: [objectId, "$readBy.user"] } }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          }
         },
       },
       {
@@ -90,6 +104,7 @@ class MessageRepository {
           lastName: "$contactInfo.lastName",
           image: "$contactInfo.image",
           color: "$contactInfo.color",
+          unreadCount: 1,
         },
       },
       {

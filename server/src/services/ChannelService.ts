@@ -39,8 +39,19 @@ export class ChannelService {
     if (cached) return cached;
     
     const channels = await ChannelRepository.findUserChannels(userId);
-    await setCache(cacheKey, channels, 300); // cache for 5 minutes
-    return channels;
+    const Message = (await import("../models/MessagesModel")).default;
+    const objectId = new mongoose.Types.ObjectId(userId);
+
+    const channelsWithUnread = await Promise.all(channels.map(async (channel) => {
+      const unreadCount = await Message.countDocuments({
+        channelId: channel._id,
+        "readBy.user": { $ne: objectId }
+      });
+      return { ...channel.toObject(), unreadCount };
+    }));
+
+    await setCache(cacheKey, channelsWithUnread, 300); // cache for 5 minutes
+    return channelsWithUnread;
   }
 
   async getChannelMessages(channelId: string, limit: number = 50, cursor?: string) {
