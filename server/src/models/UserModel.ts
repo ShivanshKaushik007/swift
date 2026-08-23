@@ -17,6 +17,7 @@ export interface IUser extends Document {
   oauthId?: string;
   starredMessages: mongoose.Types.ObjectId[];
   drafts: { channelOrUser: mongoose.Types.ObjectId; content: string; updatedAt: Date }[];
+  workspaces: mongoose.Types.ObjectId[];
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -82,6 +83,7 @@ const userSchema = new mongoose.Schema<IUser>({
       updatedAt: { type: Date, default: Date.now },
     },
   ],
+  workspaces: [{ type: mongoose.Schema.Types.ObjectId, ref: "Workspaces" }],
 });
 
 userSchema.pre("save", async function (next) {

@@ -3,15 +3,15 @@ import channelService from "../services/ChannelService";
 
 export const createChannel = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, members } = req.body;
+    const { name, members, workspaceId } = req.body;
     const userId = req.userId;
 
     if (!userId) return res.status(400).send("User ID missing");
-    if (!name || !members || !Array.isArray(members)) {
-        return res.status(400).send("Name and members array are required.");
+    if (!name || !members || !Array.isArray(members) || !workspaceId) {
+        return res.status(400).send("Name, members array, and workspaceId are required.");
     }
 
-    const newChannel = await channelService.createChannel(userId, name, members);
+    const newChannel = await channelService.createChannel(userId, name, members, workspaceId);
     return res.status(201).json({ channel: newChannel });
   } catch (error: any) {
     if (error.message.includes("not found") || error.message.includes("valid users")) {

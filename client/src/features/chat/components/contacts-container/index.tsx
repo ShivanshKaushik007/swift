@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import NewDM from "./components/new-dm";
 import ProfileInfo from "./components/profile-info";
 import { apiClient } from "@/lib/api-client";
@@ -7,9 +7,13 @@ import { useAppStore } from "@/store";
 import ContactList from "@/components/contact-list";
 import CreateChannel from "./components/create-channel";
 import GlobalSearch from "./components/global-search";
+import { WORKSPACES_ROUTES } from "@/utils/constants";
+import WorkspaceSettingsModal from "../workspace-settings";
+import { FiSettings } from "react-icons/fi";
 
 const ContactsContainer = () => {
-  const { setDirectMessagesContacts, directMessagesContacts, channels,setChannels } = useAppStore();
+  const { setDirectMessagesContacts, directMessagesContacts, channels, setChannels, activeWorkspace, setActiveWorkspaceData } = useAppStore();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const getContacts = async () => {
@@ -20,44 +24,66 @@ const ContactsContainer = () => {
         setDirectMessagesContacts(response.data.contacts);
       }
     };
-    const getChannels = async () => {
-      const response = await apiClient.get(GET_USER_CHANNELS_ROUTE, {
-        withCredentials: true,
-      });
-      if (response.data.channels) {
-        setChannels(response.data.channels);
+    const getWorkspaceData = async () => {
+      if (activeWorkspace) {
+        try {
+          const response = await apiClient.get(`${WORKSPACES_ROUTES}/${activeWorkspace._id}`, {
+            withCredentials: true,
+          });
+          if (response.data.workspace) {
+            setActiveWorkspaceData(response.data.workspace);
+            setChannels(response.data.workspace.channels || []);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      } else {
+        setChannels([]);
       }
     };
     
     getContacts();
-    getChannels();
-  }, [setChannels,setDirectMessagesContacts]);
+    getWorkspaceData();
+  }, [setChannels, setDirectMessagesContacts, activeWorkspace]);
   return (
     <div className="relative md:w-[40vw] lg:w-[35vw] xl:w-[25vw] bg-[#1b1c24] border-r-2 border-[#2f303b] w-full">
       <div className="pt-3">
         <Logo />
       </div>
       <GlobalSearch />
-      <div className="my-5">
-        <div className="flex items-center justify-between pr-10">
-          <Title text="Direct Messages" />
-          <NewDM />
+      
+      {!activeWorkspace ? (
+        <div className="my-5">
+          <div className="flex items-center justify-between pr-10">
+            <Title text="Direct Messages" />
+            <NewDM />
+          </div>
+          <div className="max-h-[75vh] overflow-y-auto scrollbar-hidden">
+            <ContactList contacts={directMessagesContacts} />
+          </div>
         </div>
-        <div className="max-h-[38vh] overflow-y-auto scrollbar-hidden ">
-          <ContactList  contacts={directMessagesContacts} />
+      ) : (
+        <div className="my-5">
+          <div className="flex items-center justify-between pr-10">
+            <div className="flex items-center gap-2">
+              <Title text={`${activeWorkspace.name} Channels`} />
+              <FiSettings 
+                className="text-neutral-400 hover:text-white cursor-pointer" 
+                onClick={() => setSettingsOpen(true)}
+              />
+            </div>
+            <CreateChannel />
+          </div>
+          <div className="max-h-[75vh] overflow-y-auto scrollbar-hidden">
+            <ContactList contacts={channels} isChannel={true} />
+          </div>
         </div>
+      )}
 
-      </div>
-      <div className="my-5">
-        <div className="flex items-center justify-between pr-10">
-          <Title text="Channels" />
-          <CreateChannel />
-        </div>
-        <div className="max-h-[38vh] overflow-y-auto scrollbar-hidden ">
-          <ContactList  contacts={channels} isChannel={true}  />
-        </div>
-      </div>
       <ProfileInfo />
+      {settingsOpen && (
+        <WorkspaceSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+      )}
     </div>
   );
 };

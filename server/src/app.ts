@@ -14,9 +14,10 @@ import passport from "./config/passport";
 import contactsRoutes from "./routes/ContactRoutes";
 import setupSocket from "./socket";
 import messagesRoutes from "./routes/MessagesRoutes";
-import channelRoutes from "./routes/ChannelRoutes";
 import searchRoutes from "./routes/SearchRoutes";
 import notificationRoutes from "./routes/NotificationRoutes";
+import workspaceRoutes from "./routes/WorkspaceRoutes";
+import channelRoutes from "./routes/ChannelRoutes";
 import { errorHandler } from "./middleware/ErrorHandler";
 import { startScheduledMessagesJob } from "./jobs/scheduledMessages";
 
@@ -63,6 +64,7 @@ app.use("/api/v1/messages", messagesRoutes);
 app.use("/api/v1/channels", channelRoutes);
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/workspaces", workspaceRoutes);
 
 app.use(errorHandler);
 

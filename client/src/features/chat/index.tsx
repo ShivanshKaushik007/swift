@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import ContactsContainer from "./components/contacts-container";
+import WorkspaceSidebar from "./components/workspace-sidebar";
 import EmptyChatContainer from "./components/empty-chat-container";
 import ChatContainer from "./components/chat-container";
 
@@ -36,6 +37,7 @@ const Chat = () => {
           {fileDownloadProgress}%
         </div>
       )}
+      <WorkspaceSidebar />
       <ContactsContainer />
       {selectedChatType === undefined ? (
         <EmptyChatContainer />

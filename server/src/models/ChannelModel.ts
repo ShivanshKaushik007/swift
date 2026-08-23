@@ -2,6 +2,7 @@ import mongoose, { Document, Model } from "mongoose";
 
 export interface IChannel extends Document {
   name: string;
+  workspaceId: mongoose.Types.ObjectId;
   members: mongoose.Types.ObjectId[];
   admin: mongoose.Types.ObjectId;
   messages: mongoose.Types.ObjectId[];
@@ -12,6 +13,11 @@ export interface IChannel extends Document {
 const channelSchema = new mongoose.Schema<IChannel>({
   name: {
     type: String,
+    required: true,
+  },
+  workspaceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Workspaces",
     required: true,
   },
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true }],

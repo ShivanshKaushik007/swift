@@ -24,21 +24,25 @@ import { Button } from "@/components/ui/button";
 import MultipleSelector from "@/components/ui/multipleselect";
 
 const CreateChannel = () => {
-  const { setSelectedChatType, setSelectedChatData, addChannel } =
+  const { setSelectedChatType, setSelectedChatData, addChannel, activeWorkspace } =
     useAppStore();
   const [newChannelModal, setNewChannelModal] = useState(false);
   const [allContacts, setAllContacts] = useState([]);
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [channelName, setChannelName] = useState("");
+  const { activeWorkspaceData } = useAppStore();
+
   useEffect(() => {
-    const getData = async () => {
-      const response = await apiClient.get(GET_ALL_CONTACTS_ROUTES, {
-        withCredentials: true,
-      });
-      setAllContacts(response.data.contacts);
-    };
-    getData();
-  }, []);
+    if (activeWorkspaceData && activeWorkspaceData.members) {
+      const formattedMembers = activeWorkspaceData.members.map((member: any) => ({
+        label: `${member.user.firstName} ${member.user.lastName}`,
+        value: member.user._id,
+      }));
+      setAllContacts(formattedMembers);
+    } else {
+      setAllContacts([]);
+    }
+  }, [activeWorkspaceData]);
 
   const CreateChannel = async () => {
     try {
@@ -48,6 +52,7 @@ const CreateChannel = () => {
           {
             name: channelName,
             members: selectedContacts.map((contact) => contact.value),
+            workspaceId: activeWorkspace?._id
           },
           { withCredentials: true }
         );

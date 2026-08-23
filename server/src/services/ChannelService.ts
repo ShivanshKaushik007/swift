@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { getCache, setCache } from "../utils/redis";
 
 export class ChannelService {
-  async createChannel(userId: string, name: string, members: string[]) {
+  async createChannel(userId: string, name: string, members: string[], workspaceId: string) {
     const admin = await UserRepository.findById(userId);
     if (!admin) {
       throw new Error("Admin user not found.");
@@ -17,6 +17,12 @@ export class ChannelService {
       name,
       members: memberObjectIds,
       admin: new mongoose.Types.ObjectId(userId),
+      workspaceId: new mongoose.Types.ObjectId(workspaceId),
+    });
+    
+    const Workspace = (await import("../models/WorkspaceModel")).default;
+    await Workspace.findByIdAndUpdate(workspaceId, {
+      $push: { channels: newChannel._id }
     });
     
     // Invalidate cache for all members and admin

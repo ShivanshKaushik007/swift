@@ -1,4 +1,10 @@
 export const createChatSlice = (set, get) => ({
+  workspaces: [],
+  activeWorkspace: null,
+  activeWorkspaceData: null,
+  setActiveWorkspaceData: (data) => set({ activeWorkspaceData: data }),
+  setWorkspaces: (workspaces) => set({ workspaces }),
+  setActiveWorkspace: (workspace) => set({ activeWorkspace: workspace, activeWorkspaceData: null, selectedChatType: undefined, selectedChatData: undefined }),
   selectedChatType: undefined,
   selectedChatData: undefined,
   selectedChatMessages: [],
