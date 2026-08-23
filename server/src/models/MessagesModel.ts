@@ -110,6 +110,8 @@ const messageSchema = new mongoose.Schema<IMessage>({
   },
 });
 
+messageSchema.index({ content: 'text' });
+
 const Message: Model<IMessage> = mongoose.model<IMessage>("Messages", messageSchema);
 
 export default Message;

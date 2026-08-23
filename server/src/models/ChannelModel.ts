@@ -39,5 +39,7 @@ channelSchema.pre("findOneAndUpdate", function (next) {
   next();
 });
 
+channelSchema.index({ name: 'text' });
+
 const Channel: Model<IChannel> = mongoose.model<IChannel>("Channels", channelSchema);
 export default Channel;

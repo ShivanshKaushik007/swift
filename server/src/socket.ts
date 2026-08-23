@@ -4,6 +4,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
 import Message from "./models/MessagesModel";
 import Channel from "./models/ChannelModel";
+import Notification from "./models/NotificationModel";
 
 let ioInstance: SocketIOServer;
 
@@ -47,6 +48,23 @@ const setupSocket = (server: HttpServer) => {
     if (message.sender) {
       io.to(`user:${message.sender}`).emit("receiveMessage", messageData);
     }
+
+    // Process mentions for DM (though rare in DMs, maybe for third party)
+    if (message.mentions && message.mentions.length > 0) {
+      for (const mentionId of message.mentions) {
+        if (mentionId !== message.sender) {
+          const notification = await Notification.create({
+            recipient: mentionId,
+            sender: message.sender,
+            type: "mention",
+            messageId: createdMessage._id,
+            content: `You were mentioned in a message.`,
+          });
+          const populatedNotif = await Notification.findById(notification._id).populate("sender", "firstName lastName email image color");
+          io.to(`user:${mentionId}`).emit("new-notification", populatedNotif);
+        }
+      }
+    }
   };
 
   const sendChannelMessage = async (message: any) => {
@@ -87,6 +105,24 @@ const setupSocket = (server: HttpServer) => {
         });
         
         io.to(`user:${channel.admin.toString()}`).emit("recieve-channel-message", finalData);
+      }
+      
+      // Process mentions for Channels
+      if (mentions && mentions.length > 0) {
+        for (const mentionId of mentions) {
+          if (mentionId !== sender) {
+            const notification = await Notification.create({
+              recipient: mentionId,
+              sender: sender,
+              type: "mention",
+              channelId: channel._id,
+              messageId: createdMessage._id,
+              content: `You were mentioned in a channel message.`,
+            });
+            const populatedNotif = await Notification.findById(notification._id).populate("sender", "firstName lastName email image color");
+            io.to(`user:${mentionId}`).emit("new-notification", populatedNotif);
+          }
+        }
       }
     }
   };
