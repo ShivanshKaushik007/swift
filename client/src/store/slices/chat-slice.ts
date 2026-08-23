@@ -130,6 +130,8 @@ export const createChatSlice = (set, get) => ({
       data.lastMessageContent = message.messageType === "text" ? message.content : null;
       data.lastMessageType = message.messageType;
       data.lastMessageTime = message.timestamp;
+      data.lastMessageSender = message.sender._id || message.sender;
+      data.lastMessageReadBy = message.readBy || [];
       
       channels.splice(index, 1);
       channels.unshift(data);
@@ -155,6 +157,8 @@ export const createChatSlice = (set, get) => ({
       data.lastMessageContent = message.messageType === "text" ? message.content : null;
       data.lastMessageType = message.messageType;
       data.lastMessageTime = message.timestamp;
+      data.lastMessageSender = message.sender._id || message.sender;
+      data.lastMessageReadBy = message.readBy || [];
       
       dmContacts.splice(index, 1);
       dmContacts.unshift(data);
@@ -163,6 +167,8 @@ export const createChatSlice = (set, get) => ({
       fromData.lastMessageContent = message.messageType === "text" ? message.content : null;
       fromData.lastMessageType = message.messageType;
       fromData.lastMessageTime = message.timestamp;
+      fromData.lastMessageSender = message.sender._id || message.sender;
+      fromData.lastMessageReadBy = message.readBy || [];
       
       dmContacts.unshift(fromData);
     }

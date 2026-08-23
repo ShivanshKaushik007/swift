@@ -3,6 +3,7 @@ import { Avatar, AvatarImage } from "./ui/avatar";
 import { HOST } from "@/utils/constants";
 import { getColor } from "@/lib/utils";
 import moment from "moment";
+import { IoCheckmarkDoneSharp, IoCheckmarkSharp } from "react-icons/io5";
 
 const ContactList = ({ contacts, isChannel = false }) => {
   const {
@@ -11,6 +12,7 @@ const ContactList = ({ contacts, isChannel = false }) => {
     setSelectedChatType,
     selectedChatType,
     setSelectedChatMessages,
+    userInfo,
   } = useAppStore();
 
   const handleClick = (contact) => {
@@ -82,11 +84,26 @@ const ContactList = ({ contacts, isChannel = false }) => {
               </div>
               
               <div className="flex justify-between items-center w-full mt-0.5">
-                <span className={`text-xs truncate max-w-[180px] ${isSelected ? "text-white/90" : "text-neutral-500"}`}>
-                  {contact.lastMessageType === "file" 
-                    ? "File attachment" 
-                    : (contact.lastMessageContent || "No messages yet")}
-                </span>
+                <div className="flex items-center gap-1 overflow-hidden">
+                  {contact.lastMessageSender === userInfo.id && contact.lastMessageContent && (
+                    <span className={`text-[12px] flex-shrink-0 ${
+                      contact.lastMessageReadBy?.some((r: any) => r.user !== userInfo.id)
+                        ? (isSelected ? "text-white" : "text-blue-500")
+                        : (isSelected ? "text-white/70" : "text-neutral-500")
+                    }`}>
+                      {contact.lastMessageReadBy?.some((r: any) => r.user !== userInfo.id) ? (
+                        <IoCheckmarkDoneSharp />
+                      ) : (
+                        <IoCheckmarkSharp />
+                      )}
+                    </span>
+                  )}
+                  <span className={`text-xs truncate max-w-[170px] ${isSelected ? "text-white/90" : "text-neutral-500"}`}>
+                    {contact.lastMessageType === "file" 
+                      ? "File attachment" 
+                      : (contact.lastMessageContent || "No messages yet")}
+                  </span>
+                </div>
                 
                 {contact.unreadCount > 0 && (
                   <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 mr-5 ${isSelected ? "bg-white text-[#8417ff]" : "bg-[#8417ff] text-white"}`}>

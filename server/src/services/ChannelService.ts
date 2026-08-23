@@ -49,7 +49,7 @@ export class ChannelService {
       });
       const lastMsg = await Message.findOne({ channelId: channel._id })
         .sort({ timestamp: -1 })
-        .select("content messageType timestamp sender")
+        .select("content messageType timestamp sender readBy")
         .lean();
         
       return { 
@@ -59,6 +59,7 @@ export class ChannelService {
         lastMessageType: lastMsg ? lastMsg.messageType : null,
         lastMessageTime: lastMsg ? lastMsg.timestamp : channel.updatedAt,
         lastMessageSender: lastMsg ? lastMsg.sender : null,
+        lastMessageReadBy: lastMsg ? lastMsg.readBy : null,
       };
     }));
 

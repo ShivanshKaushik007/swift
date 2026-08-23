@@ -71,6 +71,7 @@ class MessageRepository {
           lastMessageContent: { $first: "$content" },
           lastMessageType: { $first: "$messageType" },
           lastMessageSender: { $first: "$sender" },
+          lastMessageReadBy: { $first: "$readBy" },
           unreadCount: {
             $sum: {
               $cond: [
@@ -111,6 +112,7 @@ class MessageRepository {
           lastMessageContent: 1,
           lastMessageType: 1,
           lastMessageSender: 1,
+          lastMessageReadBy: 1,
         },
       },
       {
