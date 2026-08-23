@@ -127,6 +127,10 @@ export const createChatSlice = (set, get) => ({
     if (index !== -1) {
       const data = channels[index];
       if (isUnread) data.unreadCount = (data.unreadCount || 0) + 1;
+      data.lastMessageContent = message.messageType === "text" ? message.content : null;
+      data.lastMessageType = message.messageType;
+      data.lastMessageTime = message.timestamp;
+      
       channels.splice(index, 1);
       channels.unshift(data);
     }
@@ -148,10 +152,18 @@ export const createChatSlice = (set, get) => ({
     if (index !== -1) {
       const data = dmContacts[index];
       if (isUnread) data.unreadCount = (data.unreadCount || 0) + 1;
+      data.lastMessageContent = message.messageType === "text" ? message.content : null;
+      data.lastMessageType = message.messageType;
+      data.lastMessageTime = message.timestamp;
+      
       dmContacts.splice(index, 1);
       dmContacts.unshift(data);
     } else {
       if (isUnread) fromData.unreadCount = 1;
+      fromData.lastMessageContent = message.messageType === "text" ? message.content : null;
+      fromData.lastMessageType = message.messageType;
+      fromData.lastMessageTime = message.timestamp;
+      
       dmContacts.unshift(fromData);
     }
     set({ directMessagesContacts: dmContacts });

@@ -68,6 +68,9 @@ class MessageRepository {
             },
           },
           lastMessageTime: { $first: "$timestamp" },
+          lastMessageContent: { $first: "$content" },
+          lastMessageType: { $first: "$messageType" },
+          lastMessageSender: { $first: "$sender" },
           unreadCount: {
             $sum: {
               $cond: [
@@ -105,6 +108,9 @@ class MessageRepository {
           image: "$contactInfo.image",
           color: "$contactInfo.color",
           unreadCount: 1,
+          lastMessageContent: 1,
+          lastMessageType: 1,
+          lastMessageSender: 1,
         },
       },
       {

@@ -2,6 +2,7 @@ import { useAppStore } from "@/store";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { HOST } from "@/utils/constants";
 import { getColor } from "@/lib/utils";
+import moment from "moment";
 
 const ContactList = ({ contacts, isChannel = false }) => {
   const {
@@ -33,7 +34,7 @@ const ContactList = ({ contacts, isChannel = false }) => {
           } `}
           onClick={() => handleClick(contact)}
         >
-          <div className="flex gap-5 items-center justify-start text-neutral-300 ">
+          <div className="flex gap-4 items-center justify-start text-neutral-300 w-full">
             {!isChannel && (
               <Avatar className="h-10 w-10 rounded-full overflow-hidden">
                 {contact.image ? (
@@ -61,21 +62,37 @@ const ContactList = ({ contacts, isChannel = false }) => {
               </Avatar>
             )}
             {isChannel && (
-              <div className="bg-[#ffffff22] h-10 w-10 flex items-center justify-center rounded-full   ">
+              <div className="bg-[#ffffff22] h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full   ">
                 #
               </div>
             )}
-            {isChannel ? (
-              <span>{contact.name}</span>
-            ) : (
-              <span>{contact.firstName ? `${contact.firstName} ${contact.lastName}`:contact.email }</span>
-            )}
-            
-            {contact.unreadCount > 0 && (
-              <span className="ml-auto mr-4 bg-[#8417ff] text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                {contact.unreadCount}
-              </span>
-            )}
+            <div className="flex flex-col w-full overflow-hidden">
+              <div className="flex justify-between items-center w-full">
+                <span className="truncate max-w-[150px]">
+                  {isChannel ? contact.name : (contact.firstName ? `${contact.firstName} ${contact.lastName}` : contact.email)}
+                </span>
+                
+                {contact.lastMessageTime && (
+                  <span className="text-[10px] text-neutral-500 flex-shrink-0 ml-2">
+                    {moment(contact.lastMessageTime).format("LT")}
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex justify-between items-center w-full mt-0.5">
+                <span className="text-xs text-neutral-500 truncate max-w-[180px]">
+                  {contact.lastMessageType === "file" 
+                    ? "File attachment" 
+                    : (contact.lastMessageContent || "No messages yet")}
+                </span>
+                
+                {contact.unreadCount > 0 && (
+                  <span className="ml-auto bg-[#8417ff] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                    {contact.unreadCount}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       ))}

@@ -47,7 +47,19 @@ export class ChannelService {
         channelId: channel._id,
         "readBy.user": { $ne: objectId }
       });
-      return { ...channel.toObject(), unreadCount };
+      const lastMsg = await Message.findOne({ channelId: channel._id })
+        .sort({ timestamp: -1 })
+        .select("content messageType timestamp sender")
+        .lean();
+        
+      return { 
+        ...channel.toObject(), 
+        unreadCount,
+        lastMessageContent: lastMsg ? lastMsg.content : null,
+        lastMessageType: lastMsg ? lastMsg.messageType : null,
+        lastMessageTime: lastMsg ? lastMsg.timestamp : channel.updatedAt,
+        lastMessageSender: lastMsg ? lastMsg.sender : null,
+      };
     }));
 
     await setCache(cacheKey, channelsWithUnread, 300); // cache for 5 minutes
