@@ -18,6 +18,8 @@ export interface IUser extends Document {
   starredMessages: mongoose.Types.ObjectId[];
   drafts: { channelOrUser: mongoose.Types.ObjectId; content: string; updatedAt: Date }[];
   workspaces: mongoose.Types.ObjectId[];
+  lastActiveAt?: Date;
+  isSuperAdmin?: boolean;
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -84,6 +86,8 @@ const userSchema = new mongoose.Schema<IUser>({
     },
   ],
   workspaces: [{ type: mongoose.Schema.Types.ObjectId, ref: "Workspaces" }],
+  lastActiveAt: { type: Date, default: Date.now },
+  isSuperAdmin: { type: Boolean, default: false },
 });
 
 userSchema.pre("save", async function (next) {

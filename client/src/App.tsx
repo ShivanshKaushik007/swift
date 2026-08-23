@@ -6,6 +6,7 @@ import VerifyEmail from "./features/auth/VerifyEmail";
 import ResetPassword from "./features/auth/ResetPassword";
 import Chat from "./features/chat";
 import Profile from "./features/profile";
+import AnalyticsDashboard from "./features/admin/AnalyticsDashboard";
 import { useAppStore } from "./store";
 import { apiClient } from "./lib/api-client";
 import { GET_USER_INFO } from "./utils/constants";
@@ -96,6 +97,14 @@ const App = () => {
           }
         />
 
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute>
+              <AnalyticsDashboard />
+            </PrivateRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/auth" />} />
       </Routes>
     </BrowserRouter>
