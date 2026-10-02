@@ -97,14 +97,28 @@ const setupSocket = (server: HttpServer) => {
     
     const channel = await Channel.findById(channelId).populate("members");
     if (channel && messageData) {
-      const finalData = { ...messageData.toObject(), channelId: channel._id };
+      const finalData = { ...messageData.toObject(), channelId: channel._id.toString() };
       
       if (channel.members) {
+        console.log(`Emitting to ${channel.members.length} members`);
         channel.members.forEach((member: any) => {
+          console.log(`Emitting to user:${member._id.toString()}`);
           io.to(`user:${member._id.toString()}`).emit("recieve-channel-message", finalData);
         });
         
+        console.log(`Emitting to admin user:${channel.admin.toString()}`);
         io.to(`user:${channel.admin.toString()}`).emit("recieve-channel-message", finalData);
+      }
+      
+      // Also emit to the sender to ensure they see it in real-time if they aren't in members/admin
+      if (sender) {
+        const senderStr = sender.toString();
+        const isAdmin = channel.admin.toString() === senderStr;
+        const isMember = channel.members.some((m: any) => m._id.toString() === senderStr);
+        if (!isAdmin && !isMember) {
+          console.log(`Emitting to sender user:${senderStr} who is not admin/member`);
+          io.to(`user:${senderStr}`).emit("recieve-channel-message", finalData);
+        }
       }
       
       // Process mentions for Channels

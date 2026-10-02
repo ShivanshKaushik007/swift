@@ -40,9 +40,10 @@ export const MessageBubble = ({ message, showImageFn, downloadFileFn }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
 
-  const isSender = selectedChatType === "contact" 
-    ? message.sender === userInfo.id || (message.sender._id && message.sender._id === userInfo.id)
-    : message.sender._id === userInfo.id;
+  const isSender = 
+    message.sender === userInfo.id || 
+    (message.sender?._id && message.sender._id === userInfo.id) ||
+    (message.sender?.id && message.sender.id === userInfo.id);
 
   const senderData = selectedChatType === "channel" ? message.sender : null;
 

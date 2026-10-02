@@ -16,6 +16,10 @@ class ChannelRepository {
       .populate("admin", "firstName lastName email _id image color");
   }
 
+  async findById(channelId: string): Promise<IChannel | null> {
+    return await Channel.findById(channelId);
+  }
+
   async findByIdWithMessages(channelId: string): Promise<IChannel | null> {
     return await Channel.findById(channelId).populate({
       path: "messages",

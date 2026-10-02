@@ -149,7 +149,7 @@ const MessageContainer = () => {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behaviour: "smooth" });
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [selectedChatMessages]);
 

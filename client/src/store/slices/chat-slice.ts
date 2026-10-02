@@ -80,11 +80,11 @@ export const createChatSlice = (set, get) => ({
           recipient:
             selectedChatType === "channel"
               ? message.recipient
-              : message.recipient._id,
+              : message.recipient?._id || message.recipient,
           sender:
             selectedChatType === "channel"
               ? message.sender
-              : message.sender._id,
+              : message.sender?._id || message.sender,
         },
       ],
     });
@@ -133,7 +133,7 @@ export const createChatSlice = (set, get) => ({
     if (index !== -1) {
       const data = channels[index];
       if (isUnread) data.unreadCount = (data.unreadCount || 0) + 1;
-      data.lastMessageContent = message.messageType === "text" ? message.content : null;
+      data.lastMessageContent = (message.messageType === "text" || message.messageType === "call") ? message.content : null;
       data.lastMessageType = message.messageType;
       data.lastMessageTime = message.timestamp;
       data.lastMessageSender = message.sender._id || message.sender;
@@ -160,7 +160,7 @@ export const createChatSlice = (set, get) => ({
     if (index !== -1) {
       const data = dmContacts[index];
       if (isUnread) data.unreadCount = (data.unreadCount || 0) + 1;
-      data.lastMessageContent = message.messageType === "text" ? message.content : null;
+      data.lastMessageContent = (message.messageType === "text" || message.messageType === "call") ? message.content : null;
       data.lastMessageType = message.messageType;
       data.lastMessageTime = message.timestamp;
       data.lastMessageSender = message.sender._id || message.sender;
@@ -170,7 +170,7 @@ export const createChatSlice = (set, get) => ({
       dmContacts.unshift(data);
     } else {
       if (isUnread) fromData.unreadCount = 1;
-      fromData.lastMessageContent = message.messageType === "text" ? message.content : null;
+      fromData.lastMessageContent = (message.messageType === "text" || message.messageType === "call") ? message.content : null;
       fromData.lastMessageType = message.messageType;
       fromData.lastMessageTime = message.timestamp;
       fromData.lastMessageSender = message.sender._id || message.sender;

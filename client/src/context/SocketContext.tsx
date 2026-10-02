@@ -65,11 +65,20 @@ export const SocketProvider = ({ children }) => {
           addChannelInChannelList,
           
         } = useAppStore.getState();
+        
+        console.log("Channel message received:", message);
+        console.log("Current selectedChatType:", selectedChatType);
+        console.log("Current selectedChatData._id:", selectedChatData?._id);
+        console.log("Message channelId:", message.channelId);
+
         if (
           selectedChatType !== undefined &&
-          selectedChatData._id === message.channelId
+          selectedChatData?._id === message.channelId
         ) {
+          console.log("Adding message to channel state");
           addMessage(message);
+        } else {
+          console.log("Not adding message to channel state. Condition failed.");
         }
         showPushNotification(
           `New message in channel`,
