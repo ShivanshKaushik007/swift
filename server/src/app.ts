@@ -21,14 +21,24 @@ import channelRoutes from "./routes/ChannelRoutes";
 import adminRoutes from "./routes/AdminRoutes";
 import { errorHandler } from "./middleware/ErrorHandler";
 import { startScheduledMessagesJob } from "./jobs/scheduledMessages";
+import { startKeepAliveJob } from "./jobs/keepAlive";
 
 const app = express();
 const port = process.env.PORT || 3001;
 const databaseURL = process.env.DATABASE_URL;
 
+const allowedOrigins = Array.from(
+  new Set([
+    "http://localhost:5173",
+    "https://swift-qko3.onrender.com",
+    ...(process.env.ORIGIN ? [process.env.ORIGIN] : []),
+    ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
+  ])
+);
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://swift-qko3.onrender.com"],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })
@@ -40,6 +50,15 @@ app.use(
     crossOriginResourcePolicy: false,
   })
 );
+
+// Health check endpoint - placed before rate-limiting and auth for keep-alive & uptime monitors
+app.get(["/health", "/ping"], (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Rate Limiting for all routes
 const limiter = rateLimit({
@@ -76,6 +95,7 @@ const server = app.listen(port, () => {
 
 setupSocket(server);
 startScheduledMessagesJob();
+startKeepAliveJob();
 
 if (databaseURL) {
   mongoose

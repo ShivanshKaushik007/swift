@@ -97,7 +97,7 @@ const setupSocket = (server: HttpServer) => {
     
     const channel = await Channel.findById(channelId).populate("members");
     if (channel && messageData) {
-      const finalData = { ...messageData.toObject(), channelId: channel._id.toString() };
+      const finalData = { ...messageData.toObject(), channelId: (channel._id as any).toString() };
       
       if (channel.members) {
         console.log(`Emitting to ${channel.members.length} members`);
